@@ -531,7 +531,7 @@ async function gerarConteudo() {
   } catch(e) {
     clearInterval(iv);
     prog.style.display='none';
-    resultado.innerHTML='<div style="padding:16px;color:var(--red);font-size:13px;background:#fef2f2;border-radius:10px;">Erro ao gerar conteúdo. Verifique sua conexão.</div>';
+    resultado.innerHTML='<div style="padding:16px;color:var(--red);font-size:13px;background:#fef2f2;border-radius:10px;">⚠️ '+e.message+'. Se persistir, aguarde 30s (servidor acordando) e tente novamente.</div>';
   }
   btn.disabled=false;
 }
