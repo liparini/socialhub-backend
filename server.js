@@ -424,6 +424,32 @@ app.get('/api/pagamento/:order', async (req, res) => {
 });
 
 // =============================================
+// ROTA PROXY — BUSCAR FOTO REAL (Pexels API)
+// =============================================
+app.get('/api/imagem', async (req, res) => {
+  try {
+    const q = req.query.q || 'business professional';
+    const resp = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=5&orientation=square`,
+      { headers: { Authorization: process.env.PEXELS_API_KEY } }
+    );
+    const data = await resp.json();
+    if (!data.photos?.length) {
+      return res.json({ url: null });
+    }
+    const photo = data.photos[Math.floor(Math.random() * data.photos.length)];
+    res.json({
+      url: photo.src.large2x || photo.src.large || photo.src.original,
+      photographer: photo.photographer,
+      alt: photo.alt
+    });
+  } catch (err) {
+    console.error('Erro Pexels:', err);
+    res.json({ url: null });
+  }
+});
+
+// =============================================
 // ROTA PROXY — GERAR CONTEUDO COM IA (Claude)
 // Chamada pelo painel do cliente (evita expor API key no browser)
 // =============================================
