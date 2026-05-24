@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: socialhub-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: INFINITEPAY_TAG
+        value: socialhub
+      - key: DATABASE_URL
+        fromDatabase:
+          name: socialhub-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+
+databases:
+  - name: socialhub-db
+    databaseName: socialhub
+    user: socialhub
+    plan: free
