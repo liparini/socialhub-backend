@@ -399,8 +399,30 @@ function gerarPostsDemo() {
   ];
 }
 
-// Desenha card com foto real de fundo
-function desenharCard(canvasEl, imgEl, emoji, caption, network, hashtags) {
+// Verifica se deve mostrar watermark (só plano básico)
+function deveWatermark() {
+  return !clienteData || clienteData.plan === 'basico' || !['pro','premium'].includes(clienteData.plan);
+}
+
+// Quebra texto em linhas respeitando maxW
+function wrapText(ctx, text, maxW, maxLines) {
+  const words = (text||'').replace(/#\w+/g,'').trim().split(' ');
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line + word + ' ';
+    if (ctx.measureText(test).width > maxW && line) {
+      lines.push(line.trim());
+      line = word + ' ';
+      if (lines.length >= maxLines) break;
+    } else { line = test; }
+  }
+  if (line.trim() && lines.length < maxLines) lines.push(line.trim());
+  return lines;
+}
+
+// Desenha card com foto real de fundo — apenas título (sem hashtags na imagem)
+function desenharCard(canvasEl, imgEl, emoji, titulo, network, _hashtags) {
   const W = canvasEl.width = 1080;
   const H = canvasEl.height = 1080;
   const ctx = canvasEl.getContext('2d');
@@ -411,55 +433,54 @@ function desenharCard(canvasEl, imgEl, emoji, caption, network, hashtags) {
     const ih = imgEl.naturalHeight * ratio;
     ctx.drawImage(imgEl, (W-iw)/2, (H-ih)/2, iw, ih);
   }
-  // Gradiente escuro embaixo para legibilidade
-  const grad = ctx.createLinearGradient(0, H*0.4, 0, H);
+  // Gradiente escuro cobrindo 60% inferior
+  const grad = ctx.createLinearGradient(0, H*0.35, 0, H);
   grad.addColorStop(0, 'rgba(0,0,0,0)');
-  grad.addColorStop(0.5, 'rgba(0,0,0,0.65)');
-  grad.addColorStop(1, 'rgba(0,0,0,0.88)');
+  grad.addColorStop(0.45, 'rgba(0,0,0,0.7)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.92)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
-  // Badge da rede (topo)
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
-  ctx.beginPath(); ctx.roundRect(40,40,220,60,30); ctx.fill();
-  ctx.font = 'bold 30px sans-serif';
-  ctx.fillStyle = 'white';
+  // Badge rede (topo esquerdo)
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath(); ctx.roundRect(36,36,200,56,28); ctx.fill();
+  ctx.font = 'bold 28px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.textAlign = 'left';
-  ctx.fillText((network||'Post'), 70, 80);
-  // Emoji (centralizado no meio)
-  ctx.font = '110px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(emoji||'', W/2, 480);
-  // Legenda (quebra em linhas — área inferior)
-  ctx.font = 'bold 46px sans-serif';
+  ctx.fillText(network||'Post', 62, 74);
+  // Emoji centralizado
+  if (emoji) {
+    ctx.font = '120px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(emoji, W/2, 460);
+  }
+  // Título do slide — centralizado, área inferior
+  ctx.font = 'bold 52px sans-serif';
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
-  const cleanCaption = (caption||'').replace(/#\w+/g,'').trim();
-  const words = cleanCaption.split(' ');
-  let line='', y=620, lh=62, maxW=W-120;
-  for(const word of words) {
-    const test = line+word+' ';
-    if(ctx.measureText(test).width > maxW && line) {
-      ctx.fillText(line.trim(), W/2, y); y+=lh; line=word+' ';
-      if(y > 880) { ctx.fillText(line.trim()+'...', W/2, y); break; }
-    } else { line=test; }
+  const startY = emoji ? 590 : 520;
+  const lines = wrapText(ctx, titulo, W-140, 5);
+  const lh = 68;
+  const totalH = lines.length * lh;
+  let y = startY;
+  for (const ln of lines) {
+    ctx.fillText(ln, W/2, y);
+    y += lh;
+    if (y > 940) break;
   }
-  if(line && y<=880) ctx.fillText(line.trim(), W/2, y);
-  // Hashtags
-  ctx.font = '32px sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  const htags = (hashtags||'').split(' ').slice(0,5).join(' ');
-  ctx.fillText(htags, W/2, 960);
-  // Marca SocialHub
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.fillText('✦ SocialHub', W/2, 1030);
+  // Watermark — só plano básico
+  if (deveWatermark()) {
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.textAlign = 'center';
+    ctx.fillText('✦ SocialHub', W/2, 1040);
+  }
 }
 
 // Fallback: card com gradiente (sem foto)
-function desenharCardGradiente(canvasEl, emoji, caption, network, hashtags) {
+function desenharCardGradiente(canvasEl, emoji, titulo, network, hashtags) {
   const nets = {
-    Instagram:['#C13584','#F56040'], Facebook:['#1877F2','#0a5fc7'],
-    TikTok:['#111','#333'], YouTube:['#FF0000','#cc0000'],
+    Instagram:['#C13584','#833AB4'], Facebook:['#1877F2','#0a5fc7'],
+    TikTok:['#111','#222'], YouTube:['#FF0000','#cc0000'],
     LinkedIn:['#0A66C2','#004182'], default:['#7c5cfc','#534AB7']
   };
   const [c1,c2] = nets[network]||nets.default;
@@ -469,7 +490,7 @@ function desenharCardGradiente(canvasEl, emoji, caption, network, hashtags) {
   const grad = ctx.createLinearGradient(0,0,W,H);
   grad.addColorStop(0,c1); grad.addColorStop(1,c2);
   ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
-  desenharCard(canvasEl, null, emoji, caption, network, hashtags);
+  desenharCard(canvasEl, null, emoji, titulo, network, hashtags);
 }
 
 // Função principal: busca foto real e desenha
@@ -664,25 +685,91 @@ async function gerarConteudo() {
         </div>
       </div>`;
     } else if (tipoSelecionado==='carrossel' || tipoSelecionado==='stories') {
-      const slides = (parsed.slides||[]).map((s,i)=>`<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:4px;"><strong>${tipoSelecionado==='stories'?'Tela':'Slide'} ${i+1}:</strong> ${s}</div>`).join('');
-      const cidC = 'cvcarr'+Date.now();
-      const safeCarrLeg = (parsed.legenda||'').replace(/['"]/g,' ').slice(0,120);
-      const safeCarrHash = (parsed.hashtags||'').replace(/['"]/g,' ').slice(0,80);
-      resultado.innerHTML = `<div class="post-visual">
-        <canvas class="post-canvas" id="${cidC}" width="1080" height="1080" data-net="${rede}" data-caption="${safeCarrLeg}" data-hash="${safeCarrHash}" data-emoji="📸" onclick="baixarCard(this,this.dataset.net)"></canvas>
-        <div class="post-body">
-          <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede} · ${tipoSelecionado==='stories'?'Stories':'Carrossel'}</span><span class="post-status-badge st-sched">Novo</span></div>
-          <div class="post-caption">${parsed.legenda||''}</div>
-          <div style="margin:8px 0;">${slides}</div>
-          <div class="post-tags">${parsed.hashtags||''}</div>
-          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this)">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+      const tipoLabel = tipoSelecionado==='stories'?'Stories':'Carrossel';
+      const slidesArr = parsed.slides||[];
+      const safeHash = (parsed.hashtags||'').replace(/['"]/g,' ');
+      const assunto = document.getElementById('gen-assunto')?.value?.trim()||'';
+      const nichoVal = document.getElementById('gen-nicho-custom')?.value?.trim()||clienteData?.niche||'';
+      const baseKw = (assunto+' '+nichoVal).trim();
+      const sliderID = 'sl'+Date.now();
+      const nc = netClass(rede);
+
+      // Montar HTML do slider
+      const canvasIds = slidesArr.map((_,i)=>'cv_'+sliderID+'_'+i);
+      const canvasHTML = canvasIds.map(id=>`<canvas id="${id}" width="1080" height="1080" style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;"></canvas>`).join('');
+      const dotsHTML = canvasIds.map((_,i)=>`<span class="sdot ${i===0?'on':''}" onclick="sliderGo('${sliderID}',${i})"></span>`).join('');
+      const textareaHTML = slidesArr.map((s,i)=>`<div id="sedit_${sliderID}_${i}" style="display:${i===0?'block':'none'};">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;">${tipoLabel} ${i+1} de ${slidesArr.length}</div>
+        <textarea class="slide-text-edit" oninput="sliderUpdateText('${sliderID}',${i},this.value)">${s}</textarea>
+      </div>`).join('');
+
+      resultado.innerHTML = `<div class="slider-wrap" id="wrap_${sliderID}" style="grid-column:1/-1;">
+        <div class="slider-header">
+          <span class="post-net-badge ${nc}">${rede} · ${tipoLabel}</span>
+          <span class="post-status-badge st-sched">Novo</span>
+          <span style="font-size:12px;color:var(--muted);margin-left:auto;">Clique no texto para editar cada slide</span>
         </div>
-        <div class="post-dl-bar" data-cid="${cidC}" data-net="${rede}">
-          <button class="btn-dl" onclick="baixarCard(document.getElementById('${cidC}'),document.getElementById('${cidC}').dataset.net)">⬇ Baixar capa</button>
-          <button class="btn-post-ig" onclick="abrirPublicarCard('${cidC}',document.getElementById('${cidC}').dataset.net)">→ Publicar no ${rede}</button>
+        <div class="slider-stage">
+          ${canvasHTML}
+          <button class="slider-nav slider-prev" onclick="sliderPrev('${sliderID}')">‹</button>
+          <button class="slider-nav slider-next" onclick="sliderNext('${sliderID}')">›</button>
+          <div class="slide-counter" id="sctr_${sliderID}">1 / ${slidesArr.length}</div>
+        </div>
+        <div class="slider-dots">${dotsHTML}</div>
+        <div class="slide-edit-area">${textareaHTML}</div>
+        <div style="padding:8px 14px;border-top:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${parsed.legenda||''}</div>
+          <div style="font-size:11px;color:var(--accent);">${parsed.hashtags||''}</div>
+        </div>
+        <div class="slider-actions">
+          <button class="pabtn green" onclick="salvarPost(this)">✓ Salvar e agendar</button>
+          <button class="btn-post-ig" style="flex:1;padding:8px;border-radius:8px;border:none;background:linear-gradient(135deg,#C13584,#F56040);color:white;font-size:12px;font-weight:600;cursor:pointer;" onclick="abrirPublicar('${(parsed.legenda||'').replace(/'/g,' ')}','${safeHash}','${rede}')">→ Publicar no ${rede}</button>
+          <button class="pabtn" onclick="baixarSlideAtual('${sliderID}','${rede}')">⬇ Baixar slide</button>
+          <button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button>
         </div>
       </div>`;
-      setTimeout(()=>{const cv=document.getElementById(cidC);if(cv)gerarCardCanvas(cv,cv.dataset.emoji,cv.dataset.caption,cv.dataset.net,cv.dataset.hash,'carrossel',cv.dataset.kw||'');},50);
+
+      // Inicializar estado do slider
+      window._sliders = window._sliders||{};
+      window._sliders[sliderID] = { current:0, total: slidesArr.length, ids: canvasIds, texts: [...slidesArr], rede };
+
+      // Mostrar primeiro canvas
+      const cv0 = document.getElementById(canvasIds[0]);
+      if(cv0) cv0.style.display='block';
+
+      // Buscar fotos individuais por slide e renderizar
+      setTimeout(async ()=>{
+        try {
+          const resp = await fetch(BACKEND+'/api/imagens-slides', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ baseKeyword: baseKw, slides: slidesArr })
+          });
+          const data = await resp.json();
+          const urls = data.urls||[];
+          canvasIds.forEach((cid,i)=>{
+            const cv = document.getElementById(cid);
+            if(!cv) return;
+            const url = urls[i];
+            const texto = slidesArr[i]||'';
+            if(url){
+              const img = new Image();
+              img.crossOrigin='anonymous';
+              img.onload=()=>desenharCard(cv,img,'',texto,rede,'');
+              img.onerror=()=>desenharCardGradiente(cv,'',texto,rede,'');
+              img.src=url;
+            } else {
+              desenharCardGradiente(cv,'',texto,rede,'');
+            }
+          });
+        } catch(e){
+          canvasIds.forEach((cid,i)=>{
+            const cv=document.getElementById(cid);
+            if(cv) desenharCardGradiente(cv,'',slidesArr[i]||'',rede,'');
+          });
+        }
+      },100);
+
     } else {
       const cid2 = 'cvgen'+Date.now();
       const safeL = (parsed.legenda||'').replace(/['"]/g,' ').slice(0,120);
