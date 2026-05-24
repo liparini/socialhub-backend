@@ -56,6 +56,18 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW(),
       paid_at TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS network_tokens (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      network VARCHAR(50) NOT NULL,
+      access_token TEXT,
+      page_id VARCHAR(100),
+      username VARCHAR(100),
+      status VARCHAR(20) DEFAULT 'active',
+      connected_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(client_id, network)
+    );
   `);
   console.log('Banco de dados inicializado com sucesso!');
 }
@@ -515,6 +527,54 @@ Responda APENAS com JSON: {"emoji":"🎯","legenda":"legenda completa com emojis
   }
 });
 
+
+// =============================================
+// TOKENS DAS REDES SOCIAIS
+// =============================================
+// Salvar token de uma rede
+app.post('/api/clientes/:id/tokens', async (req, res) => {
+  try {
+    const { network, access_token, page_id, username } = req.body;
+    await pool.query(
+      `INSERT INTO network_tokens (client_id, network, access_token, page_id, username)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (client_id, network) DO UPDATE
+       SET access_token=$3, page_id=$4, username=$5, connected_at=NOW()`,
+      [req.params.id, network, access_token, page_id||null, username||null]
+    );
+    res.json({ sucesso: true });
+  } catch(err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
+// Listar tokens de um cliente
+app.get('/api/clientes/:id/tokens', async (req, res) => {
+  try {
+    const tokens = await pool.query(
+      `SELECT network, username, page_id, status, connected_at
+       FROM network_tokens WHERE client_id=$1`,
+      [req.params.id]
+    );
+    res.json(tokens.rows);
+  } catch(err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
+// Remover token de uma rede
+app.delete('/api/clientes/:id/tokens/:network', async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM network_tokens WHERE client_id=$1 AND network=$2',
+      [req.params.id, req.params.network]
+    );
+    res.json({ sucesso: true });
+  } catch(err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
 // Health check (Render usa isso para saber se o servidor esta rodando)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), servico: 'SocialHub Backend' });
@@ -540,3 +600,220 @@ initDB().then(() => {
   console.error('Erro ao iniciar banco:', err);
   process.exit(1);
 });
+
+// =============================================
+// TABELA OAUTH TOKENS (executar uma vez)
+// =============================================
+async function initOAuthTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS oauth_tokens (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      network VARCHAR(50) NOT NULL,
+      access_token TEXT,
+      refresh_token TEXT,
+      extra_data JSONB,
+      expires_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(email, network)
+    );
+  `);
+}
+
+// Mapa temporário de estados OAuth (em produção usar Redis)
+const oauthStates = new Map();
+
+// =============================================
+// META — INSTAGRAM + FACEBOOK OAUTH
+// =============================================
+app.get('/auth/meta', (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).send('Email obrigatorio');
+  const state = Buffer.from(JSON.stringify({ email, ts: Date.now() })).toString('base64url');
+  oauthStates.set(state, email);
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000); // Expira em 10min
+  const params = new URLSearchParams({
+    client_id: process.env.META_APP_ID,
+    redirect_uri: `${process.env.BACKEND_URL}/auth/meta/callback`,
+    scope: 'instagram_basic,instagram_content_publish,pages_manage_posts,pages_read_engagement,pages_show_list',
+    state,
+    response_type: 'code'
+  });
+  res.redirect(`https://www.facebook.com/dialog/oauth?${params}`);
+});
+
+app.get('/auth/meta/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  const email = oauthStates.get(state);
+  if (error || !email) return res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=meta&ok=0`);
+  try {
+    const tokenResp = await fetch(
+      `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${process.env.META_APP_ID}&client_secret=${process.env.META_APP_SECRET}&redirect_uri=${encodeURIComponent(process.env.BACKEND_URL+'/auth/meta/callback')}&code=${code}`
+    );
+    const t = await tokenResp.json();
+    if (!t.access_token) throw new Error('Token vazio');
+    await pool.query(
+      `INSERT INTO oauth_tokens (email, network, access_token, extra_data) VALUES ($1,$2,$3,$4)
+       ON CONFLICT (email, network) DO UPDATE SET access_token=$3, extra_data=$4, created_at=NOW()`,
+      [email, 'meta', t.access_token, JSON.stringify(t)]
+    );
+    oauthStates.delete(state);
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=meta&ok=1`);
+  } catch (e) {
+    console.error('Meta OAuth error:', e);
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=meta&ok=0&err=${encodeURIComponent(e.message)}`);
+  }
+});
+
+// =============================================
+// LINKEDIN OAUTH
+// =============================================
+app.get('/auth/linkedin', (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).send('Email obrigatorio');
+  const state = Buffer.from(JSON.stringify({ email, ts: Date.now() })).toString('base64url');
+  oauthStates.set(state, email);
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000);
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: process.env.LINKEDIN_CLIENT_ID,
+    redirect_uri: `${process.env.BACKEND_URL}/auth/linkedin/callback`,
+    scope: 'openid profile w_member_social',
+    state
+  });
+  res.redirect(`https://www.linkedin.com/oauth/v2/authorization?${params}`);
+});
+
+app.get('/auth/linkedin/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  const email = oauthStates.get(state);
+  if (error || !email) return res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=linkedin&ok=0`);
+  try {
+    const tokenResp = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: `${process.env.BACKEND_URL}/auth/linkedin/callback`, client_id: process.env.LINKEDIN_CLIENT_ID, client_secret: process.env.LINKEDIN_CLIENT_SECRET })
+    });
+    const t = await tokenResp.json();
+    if (!t.access_token) throw new Error('Token vazio');
+    const exp = new Date(Date.now() + (t.expires_in || 5184000) * 1000);
+    await pool.query(
+      `INSERT INTO oauth_tokens (email, network, access_token, expires_at) VALUES ($1,$2,$3,$4)
+       ON CONFLICT (email, network) DO UPDATE SET access_token=$3, expires_at=$4, created_at=NOW()`,
+      [email, 'linkedin', t.access_token, exp]
+    );
+    oauthStates.delete(state);
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=linkedin&ok=1`);
+  } catch (e) {
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=linkedin&ok=0`);
+  }
+});
+
+// =============================================
+// TWITTER/X OAUTH 2.0
+// =============================================
+app.get('/auth/twitter', (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).send('Email obrigatorio');
+  const state = Buffer.from(JSON.stringify({ email, ts: Date.now() })).toString('base64url');
+  oauthStates.set(state, email);
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000);
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: process.env.TWITTER_CLIENT_ID,
+    redirect_uri: `${process.env.BACKEND_URL}/auth/twitter/callback`,
+    scope: 'tweet.read tweet.write users.read offline.access',
+    state,
+    code_challenge: 'challenge',
+    code_challenge_method: 'plain'
+  });
+  res.redirect(`https://twitter.com/i/oauth2/authorize?${params}`);
+});
+
+app.get('/auth/twitter/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  const email = oauthStates.get(state);
+  if (error || !email) return res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=twitter&ok=0`);
+  try {
+    const creds = Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`).toString('base64');
+    const tokenResp = await fetch('https://api.twitter.com/2/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': `Basic ${creds}` },
+      body: new URLSearchParams({ code, grant_type: 'authorization_code', redirect_uri: `${process.env.BACKEND_URL}/auth/twitter/callback`, code_verifier: 'challenge' })
+    });
+    const t = await tokenResp.json();
+    if (!t.access_token) throw new Error('Token vazio');
+    await pool.query(
+      `INSERT INTO oauth_tokens (email, network, access_token, refresh_token) VALUES ($1,$2,$3,$4)
+       ON CONFLICT (email, network) DO UPDATE SET access_token=$3, refresh_token=$4, created_at=NOW()`,
+      [email, 'twitter', t.access_token, t.refresh_token||null]
+    );
+    oauthStates.delete(state);
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=twitter&ok=1`);
+  } catch (e) {
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=twitter&ok=0`);
+  }
+});
+
+// =============================================
+// TIKTOK OAUTH
+// =============================================
+app.get('/auth/tiktok', (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).send('Email obrigatorio');
+  const state = Buffer.from(JSON.stringify({ email, ts: Date.now() })).toString('base64url');
+  oauthStates.set(state, email);
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000);
+  const params = new URLSearchParams({
+    client_key: process.env.TIKTOK_CLIENT_KEY,
+    redirect_uri: `${process.env.BACKEND_URL}/auth/tiktok/callback`,
+    scope: 'user.info.basic,video.upload',
+    response_type: 'code',
+    state
+  });
+  res.redirect(`https://www.tiktok.com/auth/authorize/?${params}`);
+});
+
+app.get('/auth/tiktok/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  const email = oauthStates.get(state);
+  if (error || !email) return res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=tiktok&ok=0`);
+  try {
+    const tokenResp = await fetch('https://open-api.tiktok.com/oauth/access_token/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_key: process.env.TIKTOK_CLIENT_KEY, client_secret: process.env.TIKTOK_CLIENT_SECRET, code, grant_type: 'authorization_code' })
+    });
+    const t = await tokenResp.json();
+    const token = t.data?.access_token;
+    if (!token) throw new Error('Token vazio');
+    await pool.query(
+      `INSERT INTO oauth_tokens (email, network, access_token) VALUES ($1,$2,$3)
+       ON CONFLICT (email, network) DO UPDATE SET access_token=$3, created_at=NOW()`,
+      [email, 'tiktok', token]
+    );
+    oauthStates.delete(state);
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=tiktok&ok=1`);
+  } catch (e) {
+    res.redirect(`${process.env.FRONTEND_URL}/socialhub-cliente.html?net=tiktok&ok=0`);
+  }
+});
+
+// =============================================
+// API — Verificar redes conectadas do cliente
+// =============================================
+app.get('/api/redes-conectadas', async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.json({ redes: [] });
+  try {
+    const r = await pool.query(
+      `SELECT network FROM oauth_tokens WHERE email = $1`, [email]
+    );
+    res.json({ redes: r.rows.map(row => row.network) });
+  } catch(e) {
+    res.json({ redes: [] });
+  }
+});
+
+// Inicializar tabela OAuth ao subir
+initOAuthTable().catch(console.error);
