@@ -423,6 +423,50 @@ app.get('/api/pagamento/:order', async (req, res) => {
   }
 });
 
+// =============================================
+// ROTA PROXY — GERAR CONTEUDO COM IA (Claude)
+// Chamada pelo painel do cliente (evita expor API key no browser)
+// =============================================
+app.post('/api/gerar-conteudo', async (req, res) => {
+  try {
+    const { tipo, assunto, rede, nicho } = req.body;
+
+    const prompts = {
+      video: `Crie um roteiro de vídeo curto (60 segundos) para ${rede} sobre "${assunto||'meu negócio de '+nicho}". Nicho: ${nicho}.
+Responda APENAS com JSON: {"legenda":"legenda do post com emojis","hashtags":"#tag1 #tag2 #tag3 #tag4 #tag5","roteiro":"Cena 1 (0-10s): descricao\\nCena 2 (10-25s): descricao\\nCena 3 (25-45s): produto ou depoimento\\nCena 4 (45-60s): CTA forte","dicas":"dicas de gravacao em 2 linhas"}`,
+      carrossel: `Crie um carrossel de 5 slides para ${rede} sobre "${assunto||'dicas de '+nicho}". Nicho: ${nicho}.
+Responda APENAS com JSON: {"legenda":"legenda do post com emojis e CTA","hashtags":"#tag1 #tag2 #tag3 #tag4 #tag5","slides":["Slide 1: titulo impactante","Slide 2: ponto principal 1","Slide 3: ponto principal 2","Slide 4: dica ou prova social","Slide 5: CTA direto"],"img_keywords":"palavras em ingles para imagem relevante"}`,
+      stories: `Crie um Stories para ${rede} sobre "${assunto||nicho}". Nicho: ${nicho}.
+Responda APENAS com JSON: {"legenda":"texto curto e direto com emojis","hashtags":"#tag1 #tag2 #tag3","slides":["Tela 1: gancho inicial","Tela 2: desenvolvimento","Tela 3: CTA com link"],"img_keywords":"palavras em ingles para imagem"}`,
+      imagem: `Crie um post atrativo para ${rede} sobre "${assunto||nicho}". Nicho: ${nicho}. Tom: engajante com emojis e CTA forte.
+Responda APENAS com JSON: {"emoji":"🎯","legenda":"legenda completa com emojis e chamada para acao","hashtags":"#tag1 #tag2 #tag3 #tag4 #tag5","img_keywords":"3 palavras em ingles para busca de imagem relevante ao post"}`
+    };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: prompts[tipo] || prompts.imagem }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content?.[0]?.text?.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(raw);
+    res.json({ sucesso: true, conteudo: parsed });
+
+  } catch (err) {
+    console.error('Erro ao gerar conteudo:', err);
+    res.status(500).json({ erro: 'Erro ao gerar conteúdo. Tente novamente.' });
+  }
+});
+
 // Health check (Render usa isso para saber se o servidor esta rodando)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), servico: 'SocialHub Backend' });
