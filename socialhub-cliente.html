@@ -486,8 +486,11 @@ async function gerarCardCanvas(canvasEl, emoji, caption, network, hashtags, tipo
   ctx.fillText('Carregando foto...', W/2, H/2);
 
   // Buscar foto real pelo backend
-  const keywords = caption.replace(/[^a-zA-ZÀ-ú0-9 ]/g,' ').trim().split(' ').slice(0,4).join(' ')
-                   + ' ' + (network||'');
+  const assuntoEl = document.getElementById('gen-assunto');
+  const nichoEl = document.getElementById('gen-nicho-custom');
+  const assunto = assuntoEl?.value?.trim() || '';
+  const nicho = nichoEl?.value?.trim() || clienteData?.niche || '';
+  const keywords = (assunto + ' ' + nicho).trim() || caption.replace(/[^a-zA-ZÀ-ú0-9 ]/g,' ').trim().split(' ').slice(0,3).join(' ');
   try {
     const resp = await fetch(BACKEND+'/api/imagem?q='+encodeURIComponent(keywords));
     const data = await resp.json();
@@ -666,7 +669,7 @@ async function gerarConteudo() {
       const safeCarrLeg = (parsed.legenda||'').replace(/['"]/g,' ').slice(0,120);
       const safeCarrHash = (parsed.hashtags||'').replace(/['"]/g,' ').slice(0,80);
       resultado.innerHTML = `<div class="post-visual">
-        <canvas class="post-canvas" id="${cidC}" width="1080" height="1080" data-net="${rede}" data-caption="${safeCarrLeg}" data-hash="${safeCarrHash}" data-emoji="🎠" onclick="baixarCard(this,this.dataset.net)"></canvas>
+        <canvas class="post-canvas" id="${cidC}" width="1080" height="1080" data-net="${rede}" data-caption="${safeCarrLeg}" data-hash="${safeCarrHash}" data-emoji="📸" onclick="baixarCard(this,this.dataset.net)"></canvas>
         <div class="post-body">
           <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede} · ${tipoSelecionado==='stories'?'Stories':'Carrossel'}</span><span class="post-status-badge st-sched">Novo</span></div>
           <div class="post-caption">${parsed.legenda||''}</div>
@@ -679,7 +682,7 @@ async function gerarConteudo() {
           <button class="btn-post-ig" onclick="abrirPublicarCard('${cidC}',document.getElementById('${cidC}').dataset.net)">→ Publicar no ${rede}</button>
         </div>
       </div>`;
-      setTimeout(()=>{const cv=document.getElementById(cidC);if(cv)gerarCardCanvas(cv,cv.dataset.emoji,cv.dataset.caption,cv.dataset.net,cv.dataset.hash,'carrossel');},50);
+      setTimeout(()=>{const cv=document.getElementById(cidC);if(cv)gerarCardCanvas(cv,cv.dataset.emoji,cv.dataset.caption,cv.dataset.net,cv.dataset.hash,'carrossel',cv.dataset.kw||'');},50);
     } else {
       const cid2 = 'cvgen'+Date.now();
       const safeL = (parsed.legenda||'').replace(/['"]/g,' ').slice(0,120);
