@@ -293,9 +293,29 @@ let todosPosts = [];
 let tipoSelecionado = 'imagem';
 
 // ========= GOOGLE LOGIN =========
+// E-mails que podem acessar como demo (dona da plataforma)
+const OWNER_EMAILS = ['carolline.bhz@gmail.com','contato@carol.bhz.br'];
+
 async function handleGoogleLogin(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   const { email, name, picture } = payload;
+
+  // Dona da plataforma — acesso demo para testar
+  if (OWNER_EMAILS.includes(email.toLowerCase())) {
+    clienteData = {
+      id: 0,
+      name: name,
+      email: email,
+      plan: 'premium',
+      niche: 'agência de marketing digital',
+      posts_per_month: 60,
+      status: 'active',
+      expires_at: new Date(Date.now()+365*86400000).toISOString()
+    };
+    entrar(name, picture);
+    return;
+  }
+
   try {
     const clients = await fetch(BACKEND+'/api/clientes').then(r=>r.json());
     const found = clients.find(c=>c.email.toLowerCase()===email.toLowerCase());
@@ -336,7 +356,11 @@ function doLogout() {
 // ========= POSTS =========
 async function loadPosts() {
   try {
-    todosPosts = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/posts').then(r=>r.json())||[];
+    if (clienteData.id === 0) {
+      todosPosts = gerarPostsDemo();
+    } else {
+      todosPosts = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/posts').then(r=>r.json())||[];
+    }
   } catch(e) { todosPosts = gerarPostsDemo(); }
   document.getElementById('m-ag').textContent = todosPosts.filter(p=>p.status==='scheduled').length;
   document.getElementById('m-pub').textContent = todosPosts.filter(p=>p.status==='published').length;
