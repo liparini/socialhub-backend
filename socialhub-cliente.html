@@ -1158,16 +1158,174 @@ function pcAgendar(slID) {
 function salvarPost(btn) { btn.textContent='✓ Salvo!'; btn.className='pabtn approved'; btn.disabled=true; }
 
 
-function conectarRede(btn, nome) {
-  btn.textContent='Conectando...';
-  setTimeout(()=>{
-    const card=btn.closest('.net-card');
-    card.classList.add('connected');
-    card.querySelector('.net-st').textContent='✓ Conectado';
-    btn.outerHTML='<span class="btn-connd">Conectado ✓</span>';
-    document.getElementById('m-redes').textContent=(parseInt(document.getElementById('m-redes').textContent)||0)+1;
-  },1200);
+// ========= REDES SOCIAIS — CONEXÃO REAL =========
+
+const GUIAS_REDE = {
+  Instagram: {
+    cor: 'linear-gradient(135deg,#C13584,#F56040)', icon: '📷',
+    url: 'https://developers.facebook.com/tools/explorer/',
+    passos: [
+      'Acesse o <a href="https://business.facebook.com/" target="_blank" style="color:var(--accent)">Meta Business Suite</a> com sua conta',
+      'Vá em <strong>Configurações → Aplicativos → Criar App</strong> (tipo: Business)',
+      'Adicione o produto <strong>Instagram Graph API</strong>',
+      'Em <strong>Ferramentas → Explorador de API do Graph</strong>, gere um token com permissões: <code>instagram_content_publish</code>',
+      'Cole o token abaixo. O ID da conta Instagram é o número da sua conta comercial.'
+    ],
+    campos: [{id:'token',label:'Access Token',placeholder:'EAABsbCS...'},{id:'pageid',label:'ID da Conta Instagram',placeholder:'17841400000000000'}]
+  },
+  Facebook: {
+    cor: '#1877F2', icon: 'f',
+    url: 'https://developers.facebook.com/tools/explorer/',
+    passos: [
+      'Acesse <a href="https://developers.facebook.com" target="_blank" style="color:var(--accent)">Meta for Developers</a> e crie um App',
+      'No <strong>Explorador de API do Graph</strong>, selecione seu App',
+      'Gere token com permissões: <code>pages_manage_posts, pages_read_engagement</code>',
+      'Clique em <strong>"Obter token de página"</strong> para a página do Facebook desejada'
+    ],
+    campos: [{id:'token',label:'Page Access Token',placeholder:'EAABsbCS...'},{id:'pageid',label:'ID da Página Facebook',placeholder:'100000000000000'}]
+  },
+  TikTok: {
+    cor: '#111', icon: '♪',
+    url: 'https://developers.tiktok.com/',
+    passos: [
+      'Acesse <a href="https://developers.tiktok.com" target="_blank" style="color:var(--accent)">TikTok for Developers</a>',
+      'Crie um app e solicite acesso à <strong>Content Posting API</strong>',
+      'Após aprovação, gere o Access Token na área de <strong>Sandbox</strong>'
+    ],
+    campos: [{id:'token',label:'Access Token TikTok',placeholder:'act.xxxxxxxx...'},{id:'pageid',label:'Open ID',placeholder:'_000000000000000000'}]
+  },
+  YouTube: {
+    cor: '#FF0000', icon: '▶',
+    url: 'https://console.cloud.google.com/',
+    passos: [
+      'Acesse <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent)">Google Cloud Console</a>',
+      'Crie um projeto e ative a <strong>YouTube Data API v3</strong>',
+      'Em <strong>Credenciais → OAuth 2.0</strong>, crie para "Aplicativo da Web"',
+      'Use o <a href="https://developers.google.com/oauthplayground" target="_blank" style="color:var(--accent)">OAuth 2.0 Playground</a> para obter o token com escopo <code>youtube.upload</code>'
+    ],
+    campos: [{id:'token',label:'OAuth Access Token',placeholder:'ya29.xxxxxxxx...'},{id:'pageid',label:'Channel ID',placeholder:'UCxxxxxxxxxxxxxxxx'}]
+  },
+  LinkedIn: {
+    cor: '#0A66C2', icon: 'in',
+    url: 'https://www.linkedin.com/developers/',
+    passos: [
+      'Acesse <a href="https://www.linkedin.com/developers/apps" target="_blank" style="color:var(--accent)">LinkedIn Developers</a> e crie um App',
+      'Solicite acesso ao produto <strong>Marketing Developer Platform</strong>',
+      'Use o <a href="https://www.linkedin.com/developers/tools/oauth/token-generator" target="_blank" style="color:var(--accent)">Token Generator</a> do LinkedIn com escopos: <code>w_member_social</code>'
+    ],
+    campos: [{id:'token',label:'Access Token LinkedIn',placeholder:'AQVxxxx...'},{id:'pageid',label:'Person URN',placeholder:'urn:li:person:xxxxxxx'}]
+  },
+  Twitter: {
+    cor: '#111', icon: '𝕏',
+    url: 'https://developer.twitter.com/',
+    passos: [
+      'Acesse <a href="https://developer.twitter.com/en/portal/dashboard" target="_blank" style="color:var(--accent)">Twitter Developer Portal</a>',
+      'Crie um projeto e App com acesso <strong>Read and Write</strong>',
+      'Em <strong>Keys and Tokens</strong>, gere o Bearer Token e Access Token'
+    ],
+    campos: [{id:'token',label:'Bearer Token',placeholder:'AAAAAAAAAxxxxxxxx...'},{id:'pageid',label:'Access Token',placeholder:'0000000000-xxxxxxxxx'}]
+  }
+};
+
+function abrirConexao(rede) {
+  const g = GUIAS_REDE[rede]; if(!g) return;
+  const overlay = document.getElementById('modal-rede-overlay');
+  const content = document.getElementById('modal-rede-content');
+  const passosHTML = g.passos.map((p,i)=>
+    `<div style="display:flex;gap:10px;margin-bottom:10px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i+1}</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;">${p}</div>
+    </div>`).join('');
+  const camposHTML = g.campos.map(f=>
+    `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">${f.label}</div>
+      <input type="password" id="inp_${rede}_${f.id}" placeholder="${f.placeholder}"
+        style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:9px;background:var(--bg);font-family:monospace;font-size:12px;color:var(--text);">
+    </div>`).join('');
+  content.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div style="width:42px;height:42px;border-radius:12px;background:${g.cor};color:white;font-size:20px;display:flex;align-items:center;justify-content:center;font-weight:800;">${g.icon}</div>
+      <div>
+        <div style="font-size:17px;font-weight:800;font-family:'Syne',sans-serif;">Conectar ${rede}</div>
+        <div style="font-size:12px;color:var(--muted);">Configure o acesso para publicação automática</div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Como obter as credenciais</div>
+      ${passosHTML}
+      <a href="${g.url}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);font-weight:600;text-decoration:none;margin-top:6px;">→ Abrir painel de desenvolvedores ↗</a>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Cole suas credenciais</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Nome de usuário / Página</div>
+        <input type="text" id="inp_${rede}_username" placeholder="@seuperfil ou Nome da Página"
+          style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:9px;background:var(--surface);font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;">
+      </div>
+      ${camposHTML}
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="salvarToken('${rede}')" id="btnSalvarToken_${rede}"
+        style="flex:1;padding:12px;border-radius:10px;background:var(--accent);border:none;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">✓ Salvar conexão</button>
+      <button onclick="fecharModalRede()"
+        style="padding:12px 18px;border-radius:10px;border:1px solid var(--border2);background:transparent;font-size:13px;color:var(--muted);cursor:pointer;">Cancelar</button>
+    </div>
+    <div id="modal-rede-err" style="display:none;margin-top:10px;font-size:12px;color:var(--red);padding:8px 12px;background:#fef2f2;border-radius:8px;"></div>`;
+  overlay.style.display = 'flex';
+  setTimeout(()=>document.getElementById('inp_'+rede+'_username')?.focus(),100);
 }
+
+function fecharModalRede() {
+  document.getElementById('modal-rede-overlay').style.display = 'none';
+}
+
+async function salvarToken(rede) {
+  const token    = document.getElementById('inp_'+rede+'_token')?.value.trim();
+  const pageid   = document.getElementById('inp_'+rede+'_pageid')?.value.trim();
+  const username = document.getElementById('inp_'+rede+'_username')?.value.trim();
+  const errEl    = document.getElementById('modal-rede-err');
+  if (!token)    { errEl.textContent='Cole o Access Token antes de salvar.'; errEl.style.display='block'; return; }
+  if (!username) { errEl.textContent='Informe o nome de usuário ou página.'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  const btn = document.getElementById('btnSalvarToken_'+rede);
+  if(btn){ btn.textContent='Salvando...'; btn.disabled=true; }
+  try {
+    if (clienteData?.id && clienteData.id !== 0) {
+      await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/tokens', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ network:rede, access_token:token, page_id:pageid, username })
+      });
+    }
+    atualizarCardRede(rede, username);
+    fecharModalRede();
+  } catch(e) {
+    errEl.textContent='Erro ao salvar. Tente novamente.'; errEl.style.display='block';
+    if(btn){ btn.textContent='✓ Salvar conexão'; btn.disabled=false; }
+  }
+}
+
+function atualizarCardRede(rede, username) {
+  const card  = document.getElementById('netcard-'+rede);
+  const stEl  = document.getElementById('netst-'+rede);
+  const userEl= document.getElementById('netuser-'+rede);
+  const btnEl = document.getElementById('netbtn-'+rede);
+  if(card)  { card.classList.remove('pending'); card.classList.add('connected'); }
+  if(stEl)  { stEl.textContent='✓ Conectado'; stEl.style.color='var(--green)'; }
+  if(userEl){ userEl.textContent='@'+username; userEl.style.display='block'; }
+  if(btnEl) { btnEl.textContent='Reconfigurar'; btnEl.style.fontSize='11px'; }
+}
+
+async function carregarTokens() {
+  if (!clienteData?.id || clienteData.id === 0) return;
+  try {
+    const tokens = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/tokens').then(r=>r.json());
+    let n = 0;
+    (tokens||[]).forEach(t => { atualizarCardRede(t.network, t.username||''); n++; });
+    if(document.getElementById('m-redes')) document.getElementById('m-redes').textContent = n;
+  } catch(e) {}
+}
+
+function conectarRede() {} // legacy stub — uso: abrirConexao(nome)
 
 // ========= TABS =========
 function switchTab(id, el) {
