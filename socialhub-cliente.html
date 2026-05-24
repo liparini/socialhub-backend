@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SocialHub — Meu Painel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f8f8fc;--surface:#ffffff;--surface2:#f1f1f8;--border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);--accent:#7c5cfc;--accent2:#a78bfa;--green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--red-bg:#fef2f2;--yellow:#d97706;--yellow-bg:#fffbeb;--text:#111118;--muted:#666677;--muted2:#aaaabc;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg);}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,0.06);}
+.login-logo{display:flex;align-items:center;gap:8px;margin-bottom:28px;justify-content:center;}
+.login-logo .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);}
+.login-logo span{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.login-box h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;text-align:center;}
+.login-box p{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;}
+.field input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;}
+.field input:focus{outline:none;border-color:var(--accent);}
+.btn-login{width:100%;padding:13px;border-radius:10px;background:var(--accent);border:none;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;}
+.login-err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none;}
+.login-note{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.topbar-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.avatar-sm{width:32px;height:32px;border-radius:50%;background:rgba(124,92,252,0.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.user-name{font-size:13px;font-weight:500;}
+.plan-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(124,92,252,0.1);color:var(--accent);}
+
+.app{display:none;}
+.app.on{display:block;}
+
+/* CONTENT */
+.page{max-width:900px;margin:0 auto;padding:28px 24px;}
+.section-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;}
+.section-sub{font-size:14px;color:var(--muted);margin-bottom:24px;}
+
+/* WELCOME CARD */
+.welcome{background:var(--accent);border-radius:16px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;}
+.welcome::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.05);}
+.welcome h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:white;margin-bottom:6px;}
+.welcome p{font-size:14px;color:rgba(255,255,255,0.75);max-width:500px;}
+.welcome-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:white;font-size:12px;font-weight:500;padding:4px 12px;border-radius:99px;margin-bottom:14px;}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.mc .ml{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+.mc .mv{font-size:28px;font-weight:700;font-family:'Syne',sans-serif;}
+.mc .md{font-size:11px;color:var(--green);margin-top:4px;}
+
+/* NETS */
+.nets-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:20px;}
+.nets-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;}
+.nets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.net-card{border:1px solid var(--border2);border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+.net-card.connected{border-color:var(--green);background:var(--green-bg);}
+.net-card.pending{border-color:var(--border2);background:var(--bg);}
+.net-icon{font-size:28px;}
+.net-name{font-size:13px;font-weight:500;}
+.net-status{font-size:11px;font-weight:600;}
+.net-card.connected .net-status{color:var(--green);}
+.net-card.pending .net-status{color:var(--muted2);}
+.btn-connect{font-size:11px;padding:5px 14px;border-radius:99px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);margin-top:4px;transition:all .15s;}
+.btn-connect:hover{border-color:var(--accent);color:var(--accent);}
+.btn-connected{font-size:11px;padding:5px 14px;border-radius:99px;border:none;background:var(--green-bg);color:var(--green);font-weight:600;}
+
+/* POSTS */
+.posts-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:20px;}
+.posts-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.posts-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.post-card{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.post-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.post-emoji{font-size:22px;}
+.post-net{font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;}
+.ig{background:#fce4ec;color:#c2185b;}
+.fb{background:#e3f2fd;color:#1565c0;}
+.tt{background:#f5f5f5;color:#333;}
+.yt{background:#ffebee;color:#c62828;}
+.li{background:#e3f2fd;color:#0d47a1;}
+.tw{background:#f5f5f5;color:#333;}
+.post-time{font-size:11px;color:var(--muted);margin-left:auto;}
+.post-status{font-size:11px;font-weight:600;padding:2px 10px;border-radius:99px;}
+.st-pub{background:var(--green-bg);color:var(--green);}
+.st-sched{background:rgba(124,92,252,0.1);color:var(--accent);}
+.st-draft{background:var(--yellow-bg);color:var(--yellow);}
+.post-caption{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:6px;}
+.post-tags{font-size:12px;color:var(--accent);}
+.post-actions{display:flex;gap:6px;margin-top:10px;}
+.btn-sm{font-size:11px;padding:5px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .15s;}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm.approve{background:var(--green-bg);border-color:var(--green);color:var(--green);font-weight:600;}
+.btn-sm.approved{background:var(--green-bg);border-color:var(--green);color:var(--green);font-weight:600;opacity:.6;cursor:default;}
+
+/* PLAN */
+.plan-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:20px;}
+.plan-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.plan-row:last-child{border-bottom:none;}
+.plan-key{font-size:13px;color:var(--muted);}
+.plan-val{font-size:13px;font-weight:500;}
+
+.tab-row{display:flex;gap:4px;margin-bottom:20px;background:var(--surface2);border-radius:10px;padding:4px;}
+.tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);transition:all .15s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
+.tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+
+.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-box{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;padding:20px;}
+.empty-box{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.empty-box .ei{font-size:40px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo"><span class="dot"></span><span>SocialHub</span></div>
+    <h2>Acessar meu painel</h2>
+    <p>Entre com o e-mail que você usou para contratar</p>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seuemail@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar no meu painel →</button>
+    <div class="login-err" id="login-err">E-mail não encontrado ou senha incorreta.</div>
+    <div class="login-note">Primeira vez? Acesse com o e-mail que usou ao contratar.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-logo"><span class="dot"></span> SocialHub</div>
+    <div class="topbar-right">
+      <span class="plan-pill" id="top-plan">Pro</span>
+      <div class="user-name" id="top-name">—</div>
+      <div class="avatar-sm" id="top-avatar">?</div>
+      <button onclick="doLogout()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;">Sair</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="tab-row">
+      <button class="tab on" onclick="switchTab('dash',this)">Início</button>
+      <button class="tab" onclick="switchTab('posts',this)">Meus posts</button>
+      <button class="tab" onclick="switchTab('redes',this)">Redes sociais</button>
+      <button class="tab" onclick="switchTab('plano',this)">Meu plano</button>
+    </div>
+
+    <!-- DASH -->
+    <div id="tab-dash">
+      <div class="welcome">
+        <div class="welcome-badge">✦ IA gerando seu conteúdo</div>
+        <h2 id="welcome-name">Olá! 👋</h2>
+        <p>Seus posts estão sendo criados e agendados automaticamente. Aprove ou deixe rolar!</p>
+      </div>
+      <div class="metrics">
+        <div class="mc"><div class="ml">Posts agendados</div><div class="mv" id="m-agendados">—</div><div class="md">próximos 30 dias</div></div>
+        <div class="mc"><div class="ml">Posts publicados</div><div class="mv" id="m-publicados">—</div><div class="md">este mês</div></div>
+        <div class="mc"><div class="ml">Redes conectadas</div><div class="mv" id="m-redes">0</div><div class="md">de <span id="m-redes-total">4</span> disponíveis</div></div>
+      </div>
+      <div class="posts-section">
+        <div class="posts-head">
+          <div class="posts-title">Próximos posts</div>
+          <button class="btn-sm" onclick="switchTab('posts',document.querySelectorAll('.tab')[1])">Ver todos</button>
+        </div>
+        <div id="dash-posts"><div class="loading-box"><div class="spin"></div> Carregando posts...</div></div>
+      </div>
+    </div>
+
+    <!-- POSTS -->
+    <div id="tab-posts" style="display:none;">
+      <div class="posts-section">
+        <div class="posts-head">
+          <div class="posts-title">Todos os meus posts</div>
+          <div style="display:flex;gap:6px;">
+            <select id="filter-status" onchange="renderPosts()" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-family:'DM Sans',sans-serif;color:var(--text);">
+              <option value="">Todos</option>
+              <option value="scheduled">Agendados</option>
+              <option value="published">Publicados</option>
+            </select>
+          </div>
+        </div>
+        <div id="all-posts"><div class="loading-box"><div class="spin"></div> Carregando...</div></div>
+      </div>
+    </div>
+
+    <!-- REDES -->
+    <div id="tab-redes" style="display:none;">
+      <div class="nets-section">
+        <div class="nets-title">Suas redes sociais</div>
+        <div class="nets-grid" id="nets-grid">
+          <div class="net-card pending"><div class="net-icon">📷</div><div class="net-name">Instagram</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'Instagram')">Conectar</button></div>
+          <div class="net-card pending"><div class="net-icon">f</div><div class="net-name">Facebook</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'Facebook')">Conectar</button></div>
+          <div class="net-card pending"><div class="net-icon">♪</div><div class="net-name">TikTok</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'TikTok')">Conectar</button></div>
+          <div class="net-card pending"><div class="net-icon">▶</div><div class="net-name">YouTube</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'YouTube')">Conectar</button></div>
+          <div class="net-card pending"><div class="net-icon">in</div><div class="net-name">LinkedIn</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'LinkedIn')">Conectar</button></div>
+          <div class="net-card pending"><div class="net-icon">𝕏</div><div class="net-name">Twitter/X</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'Twitter')">Conectar</button></div>
+        </div>
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.06);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">
+          ✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados pela IA.
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANO -->
+    <div id="tab-plano" style="display:none;">
+      <div class="plan-section">
+        <div class="posts-title" style="margin-bottom:16px;">Meu plano</div>
+        <div class="plan-row"><div class="plan-key">Plano atual</div><div class="plan-val"><span class="plan-pill" id="pl-plano">—</span></div></div>
+        <div class="plan-row"><div class="plan-key">Status</div><div class="plan-val" id="pl-status">—</div></div>
+        <div class="plan-row"><div class="plan-key">Posts por mês</div><div class="plan-val" id="pl-posts">—</div></div>
+        <div class="plan-row"><div class="plan-key">Vencimento</div><div class="plan-val" id="pl-venc">—</div></div>
+        <div class="plan-row"><div class="plan-key">Nicho</div><div class="plan-val" id="pl-nicho">—</div></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="https://socialhub-site.onrender.com/socialhub-landing.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--accent);color:white;font-size:13px;font-weight:600;text-decoration:none;">↑ Fazer upgrade</a>
+        <button onclick="alert('Entre em contato via WhatsApp para suporte.')" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-family:\'DM Sans\',sans-serif;cursor:pointer;">Suporte via WhatsApp</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BACKEND = 'https://socialhub-backend-sqh1.onrender.com';
+// ACESSO DE TESTE — e-mail e senha padrão para demonstração
+const DEMO = { email: 'cliente@teste.com', nome: 'Cliente Teste', plano: 'pro', nicho: 'restaurante', posts: 30 };
+
+let clienteData = null;
+let todosPosts = [];
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!email) { showErr('Informe seu e-mail.'); return; }
+
+  // Acesso demo
+  if (email === DEMO.email) {
+    clienteData = { id: 0, name: DEMO.nome, email: DEMO.email, plan: DEMO.plano, niche: DEMO.nicho, posts_per_month: DEMO.posts, status: 'active', expires_at: new Date(Date.now()+30*86400000).toISOString() };
+    entrar();
+    return;
+  }
+
+  // Buscar cliente no backend pelo e-mail
+  try {
+    const clients = await fetch(BACKEND+'/api/clientes').then(r=>r.json());
+    const found = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
+    if (!found) { showErr('E-mail não encontrado. Verifique ou cadastre-se na página de vendas.'); return; }
+    clienteData = found;
+    entrar();
+  } catch(e) {
+    showErr('Erro de conexão. Tente novamente.');
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function entrar() {
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('app').classList.add('on');
+  const ini = (clienteData.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('top-avatar').textContent = ini;
+  document.getElementById('top-name').textContent = clienteData.name?.split(' ')[0] || '';
+  document.getElementById('top-plan').textContent = (clienteData.plan||'—').charAt(0).toUpperCase()+(clienteData.plan||'').slice(1);
+  document.getElementById('welcome-name').textContent = 'Olá, '+(clienteData.name?.split(' ')[0]||'')+'! 👋';
+  document.getElementById('pl-plano').textContent = clienteData.plan||'—';
+  document.getElementById('pl-status').textContent = clienteData.status==='active'?'✅ Ativo':'⏳ Pendente';
+  document.getElementById('pl-posts').textContent = (clienteData.posts_per_month||0)+' posts/mês';
+  document.getElementById('pl-nicho').textContent = clienteData.niche||'—';
+  document.getElementById('pl-venc').textContent = clienteData.expires_at ? new Date(clienteData.expires_at).toLocaleDateString('pt-BR') : '—';
+  document.getElementById('m-redes-total').textContent = clienteData.plan==='premium'?6:clienteData.plan==='pro'?4:2;
+  loadPosts();
+}
+
+function doLogout() {
+  clienteData = null;
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('login-err').style.display = 'none';
+}
+
+async function loadPosts() {
+  if (!clienteData) return;
+  let posts = [];
+  if (clienteData.id === 0) {
+    // Posts demo
+    posts = gerarPostsDemo();
+  } else {
+    try {
+      posts = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/posts').then(r=>r.json()) || [];
+    } catch(e) { posts = gerarPostsDemo(); }
+  }
+  todosPosts = posts;
+  const agendados = posts.filter(p=>p.status==='scheduled').length;
+  const publicados = posts.filter(p=>p.status==='published').length;
+  document.getElementById('m-agendados').textContent = agendados;
+  document.getElementById('m-publicados').textContent = publicados;
+  renderDashPosts();
+  renderPosts();
+}
+
+function gerarPostsDemo() {
+  const redes = ['Instagram','Facebook','TikTok','Instagram','LinkedIn'];
+  const emojis = ['🍕','🍔','🥗','🍣','🎉'];
+  const legendas = [
+    'Sexta-feira pede sabor! Venha experimentar nossas especialidades 🍕🔥 Reservas pelo WhatsApp!',
+    'Novo cardápio chegando! Ingredientes frescos todos os dias para você. Venha nos visitar 😍',
+    'Almoço especial do dia com muito amor e sabor! Abertura às 11h. Te esperamos! 🥗✨',
+    'Delivery disponível! Peça pelo app e receba em até 40 minutos 🛵💨 Link na bio!',
+    'Obrigado a todos os clientes que passaram por aqui esta semana! Vocês são incríveis 🙏❤️'
+  ];
+  const tags = ['#gastronomia #comida #restaurante #foodie','#delivery #pizza #comida #sabor','#almoco #comida #saudavel #fresco','#delivery #rapido #gostoso #pedijá','#gratidao #clientes #restaurante #amor'];
+  const agora = new Date();
+  return legendas.map((leg, i) => ({
+    id: i+1, caption: leg, hashtags: tags[i], network: redes[i], emoji: emojis[i],
+    status: i < 2 ? 'published' : 'scheduled',
+    scheduled_at: new Date(agora.getTime()+(i-1)*2*86400000).toISOString()
+  }));
+}
+
+function netClass(rede) {
+  return {Instagram:'ig',Facebook:'fb',TikTok:'tt',YouTube:'yt',LinkedIn:'li','Twitter/X':'tw',Twitter:'tw'}[rede]||'';
+}
+
+function renderDashPosts() {
+  const el = document.getElementById('dash-posts');
+  const prox = todosPosts.filter(p=>p.status==='scheduled').slice(0,3);
+  if (!prox.length) { el.innerHTML = '<div class="empty-box"><div class="ei">📭</div>Nenhum post agendado ainda.<br><span style="font-size:12px;">Nossa IA está preparando seu conteúdo!</span></div>'; return; }
+  el.innerHTML = prox.map(p => postCard(p, true)).join('');
+}
+
+function renderPosts() {
+  const el = document.getElementById('all-posts');
+  const filtro = document.getElementById('filter-status')?.value || '';
+  const lista = filtro ? todosPosts.filter(p=>p.status===filtro) : todosPosts;
+  if (!lista.length) { el.innerHTML = '<div class="empty-box"><div class="ei">📭</div>Nenhum post encontrado.</div>'; return; }
+  el.innerHTML = lista.map(p => postCard(p, false)).join('');
+}
+
+function postCard(p, mini) {
+  const dt = p.scheduled_at ? new Date(p.scheduled_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+  const stClass = p.status==='published'?'st-pub':p.status==='scheduled'?'st-sched':'st-draft';
+  const stLabel = p.status==='published'?'Publicado':p.status==='scheduled'?'Agendado':'Rascunho';
+  const nc = netClass(p.network);
+  const actions = p.status==='scheduled' ? `<button class="btn-sm approve" onclick="aprovar(this,${p.id})">✓ Aprovar</button><button class="btn-sm" onclick="editar(${p.id})">Editar</button>` : '';
+  return `<div class="post-card">
+    <div class="post-head">
+      <span class="post-emoji">${p.emoji||'📱'}</span>
+      <span class="post-net ${nc}">${p.network||'—'}</span>
+      <span class="post-time">${dt}</span>
+      <span class="post-status ${stClass}">${stLabel}</span>
+    </div>
+    <div class="post-caption">${p.caption||''}</div>
+    <div class="post-tags">${p.hashtags||''}</div>
+    ${!mini ? `<div class="post-actions">${actions}</div>` : ''}
+  </div>`;
+}
+
+function aprovar(btn, id) {
+  btn.textContent = '✓ Aprovado';
+  btn.className = 'btn-sm approved';
+  btn.disabled = true;
+}
+
+function editar(id) {
+  const novaLeg = prompt('Editar legenda:');
+  if (novaLeg) { alert('Legenda atualizada! Em produção, isso seria salvo no banco de dados.'); }
+}
+
+function conectarRede(btn, nome) {
+  btn.textContent = 'Conectando...';
+  setTimeout(() => {
+    const card = btn.closest('.net-card');
+    card.classList.remove('pending');
+    card.classList.add('connected');
+    card.querySelector('.net-status').textContent = '✓ Conectado';
+    btn.className = 'btn-connected';
+    btn.textContent = 'Conectado';
+    const atual = parseInt(document.getElementById('m-redes').textContent)||0;
+    document.getElementById('m-redes').textContent = atual+1;
+  }, 1200);
+}
+
+function switchTab(id, el) {
+  ['dash','posts','redes','plano'].forEach(t => document.getElementById('tab-'+t).style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('tab-'+id).style.display='block';
+  if(el) el.classList.add('on');
+}
+</script>
+</body>
+</html>
