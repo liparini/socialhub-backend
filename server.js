@@ -460,22 +460,38 @@ app.get('/api/imagem', async (req, res) => {
 app.post('/api/imagens-slides', async (req, res) => {
   try {
     const { baseKeyword, slides } = req.body;
+    const usedIds = new Set(); // evitar fotos repetidas
     const urls = [];
-    for (const slide of (slides||[])) {
-      // Extrair palavras-chave do slide + assunto base
-      const slideWords = slide.replace(/[^a-zA-ZÀ-ú0-9 ]/g,' ').trim().split(' ').filter(w=>w.length>3).slice(0,3).join(' ');
-      const q = (baseKeyword + ' ' + slideWords).trim().slice(0, 80);
-      try {
-        const resp = await fetch(
-          `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=3&orientation=square`,
-          { headers: { Authorization: process.env.PEXELS_API_KEY } }
-        );
-        const data = await resp.json();
-        if (data.photos?.length) {
-          const p = data.photos[Math.floor(Math.random()*data.photos.length)];
-          urls.push(p.src.large2x || p.src.large || p.src.original);
-        } else { urls.push(null); }
-      } catch(e) { urls.push(null); }
+
+    for (let idx=0; idx<(slides||[]).length; idx++) {
+      const slide = slides[idx];
+      // Remover "Slide X:" e extrair palavras relevantes
+      const cleanSlide = slide.replace(/^slide\s*\d+\s*[:\-–]?\s*/i,'').replace(/[#🎯✨💪🍕📱]/g,' ');
+      const slideWords = cleanSlide.replace(/[^a-zA-ZÀ-ú0-9 ]/g,' ').trim()
+        .split(' ').filter(w=>w.length>3).slice(0,4).join(' ');
+      const q = (slideWords || baseKeyword).trim().slice(0,80);
+
+      let found = false;
+      // Tentar até 3 páginas para evitar repetição
+      for (let page=1; page<=3 && !found; page++) {
+        try {
+          const resp = await fetch(
+            `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=10&page=${page}&orientation=square`,
+            { headers: { Authorization: process.env.PEXELS_API_KEY } }
+          );
+          const data = await resp.json();
+          if (data.photos?.length) {
+            // Pegar foto que ainda não foi usada
+            const nova = data.photos.find(p => !usedIds.has(p.id));
+            if (nova) {
+              usedIds.add(nova.id);
+              urls.push(nova.src.large2x || nova.src.large || nova.src.original);
+              found = true;
+            }
+          }
+        } catch(e) {}
+      }
+      if (!found) urls.push(null);
     }
     res.json({ urls });
   } catch(err) {
