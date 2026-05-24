@@ -436,14 +436,38 @@ app.get('/api/imagem', async (req, res) => {
     );
     const data = await resp.json();
     if (!data.photos?.length) return res.json({ url: null, urls: [] });
-
-    // Embaralhar para variar
     const shuffled = data.photos.sort(() => Math.random()-0.5);
     const urls = shuffled.slice(0, count).map(p => p.src.large2x || p.src.large || p.src.original);
     res.json({ url: urls[0], urls });
   } catch (err) {
-    console.error('Erro Pexels:', err);
     res.json({ url: null, urls: [] });
+  }
+});
+
+// Buscar fotos individuais para cada slide do carrossel
+app.post('/api/imagens-slides', async (req, res) => {
+  try {
+    const { baseKeyword, slides } = req.body;
+    const urls = [];
+    for (const slide of (slides||[])) {
+      // Extrair palavras-chave do slide + assunto base
+      const slideWords = slide.replace(/[^a-zA-ZÀ-ú0-9 ]/g,' ').trim().split(' ').filter(w=>w.length>3).slice(0,3).join(' ');
+      const q = (baseKeyword + ' ' + slideWords).trim().slice(0, 80);
+      try {
+        const resp = await fetch(
+          `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=3&orientation=square`,
+          { headers: { Authorization: process.env.PEXELS_API_KEY } }
+        );
+        const data = await resp.json();
+        if (data.photos?.length) {
+          const p = data.photos[Math.floor(Math.random()*data.photos.length)];
+          urls.push(p.src.large2x || p.src.large || p.src.original);
+        } else { urls.push(null); }
+      } catch(e) { urls.push(null); }
+    }
+    res.json({ urls });
+  } catch(err) {
+    res.status(500).json({ urls: [] });
   }
 });
 
