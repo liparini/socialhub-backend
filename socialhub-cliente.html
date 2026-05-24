@@ -474,25 +474,25 @@ async function gerarConteudo() {
   let mi=0;
   const iv = setInterval(()=>{ msg.textContent=msgs[Math.min(mi,msgs.length-1)]; bar.style.width=Math.min((mi+1)/msgs.length*90,90)+'%'; mi++; },700);
 
-  try {
-    const prompt = tipoSelecionado==='video'
-      ? `Crie um roteiro de vídeo curto (60 segundos) para ${rede} sobre "${assunto||'meu negócio de '+nicho}". Nicho: ${nicho}.
-Responda APENAS com JSON: {"legenda":"legenda do post","hashtags":"#tag1 #tag2 #tag3","roteiro":"Cena 1 (0-10s): [descrição]\\nCena 2 (10-25s): [descrição]\\nCena 3 (25-45s): [depoimento/produto]\\nCena 4 (45-60s): CTA forte","dicas":"dicas de gravação"}`
-      : tipoSelecionado==='carrossel'
-      ? `Crie um carrossel de 5 slides para ${rede} sobre "${assunto||'dicas de '+nicho}". Nicho: ${nicho}.
-Responda APENAS com JSON: {"legenda":"legenda do post","hashtags":"#tag1 #tag2 #tag3","slides":["Slide 1: título forte","Slide 2: ponto 1","Slide 3: ponto 2","Slide 4: ponto 3","Slide 5: CTA"],"img_keywords":"palavras para imagem em inglês"}`
-      : `Crie um post atrativo para ${rede} sobre "${assunto||nicho}". Nicho: ${nicho}. Tom: engajante com emojis e CTA.
-Responda APENAS com JSON: {"emoji":"🍕","legenda":"legenda completa","hashtags":"#tag1 #tag2 #tag3 #tag4 #tag5","img_keywords":"palavras-chave em inglês para busca de imagem relevante"}`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:800,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const data = await resp.json();
     const raw = data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
     const parsed = JSON.parse(raw);
