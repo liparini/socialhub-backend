@@ -357,16 +357,66 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- REDES SOCIAIS -->
     <div id="tab-redes" style="display:none;">
       <div class="card">
-        <div class="card-head"><div class="card-title">Suas redes sociais</div></div>
-        <div class="nets-grid" id="nets-grid">
-          <div class="net-card"><div class="net-icon">📷</div><div class="net-name">Instagram</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Instagram')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">f</div><div class="net-name">Facebook</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Facebook')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">♪</div><div class="net-name">TikTok</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'TikTok')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">▶</div><div class="net-name">YouTube</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'YouTube')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">in</div><div class="net-name">LinkedIn</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'LinkedIn')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">𝕏</div><div class="net-name">Twitter/X</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Twitter')">Conectar</button></div>
+        <div class="card-head">
+          <div class="card-title">Suas redes sociais</div>
+          <span style="font-size:12px;color:var(--muted);">Conecte para publicação automática</span>
         </div>
-        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.</div>
+        <div class="nets-grid" id="nets-grid">
+          <div class="net-card" id="netcard-Instagram" data-net="Instagram">
+            <div class="net-icon" style="background:linear-gradient(135deg,#C13584,#F56040);color:white;font-size:20px;">📷</div>
+            <div class="net-name">Instagram</div>
+            <div class="net-st" id="netst-Instagram">Não conectado</div>
+            <div class="net-user" id="netuser-Instagram" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-Instagram" onclick="abrirConexao('Instagram')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-Facebook" data-net="Facebook">
+            <div class="net-icon" style="background:#1877F2;color:white;font-size:20px;font-weight:800;">f</div>
+            <div class="net-name">Facebook</div>
+            <div class="net-st" id="netst-Facebook">Não conectado</div>
+            <div class="net-user" id="netuser-Facebook" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-Facebook" onclick="abrirConexao('Facebook')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-TikTok" data-net="TikTok">
+            <div class="net-icon" style="background:#111;color:white;font-size:20px;">♪</div>
+            <div class="net-name">TikTok</div>
+            <div class="net-st" id="netst-TikTok">Não conectado</div>
+            <div class="net-user" id="netuser-TikTok" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-TikTok" onclick="abrirConexao('TikTok')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-YouTube" data-net="YouTube">
+            <div class="net-icon" style="background:#FF0000;color:white;font-size:20px;">▶</div>
+            <div class="net-name">YouTube</div>
+            <div class="net-st" id="netst-YouTube">Não conectado</div>
+            <div class="net-user" id="netuser-YouTube" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-YouTube" onclick="abrirConexao('YouTube')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-LinkedIn" data-net="LinkedIn">
+            <div class="net-icon" style="background:#0A66C2;color:white;font-size:20px;font-weight:800;">in</div>
+            <div class="net-name">LinkedIn</div>
+            <div class="net-st" id="netst-LinkedIn">Não conectado</div>
+            <div class="net-user" id="netuser-LinkedIn" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-LinkedIn" onclick="abrirConexao('LinkedIn')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-Twitter" data-net="Twitter">
+            <div class="net-icon" style="background:#111;color:white;font-size:20px;font-weight:800;">𝕏</div>
+            <div class="net-name">Twitter / X</div>
+            <div class="net-st" id="netst-Twitter">Não conectado</div>
+            <div class="net-user" id="netuser-Twitter" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-Twitter" onclick="abrirConexao('Twitter')">Configurar</button>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">
+          ✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.
+          Cada rede requer um token de acesso da sua conta de desenvolvedor.
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONEXÃO DE REDE -->
+    <div id="modal-rede-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:20px;">
+      <div id="modal-rede" style="background:var(--surface);border-radius:20px;padding:28px 32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
+        <button onclick="fecharModalRede()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;">✕</button>
+        <div id="modal-rede-content"></div>
       </div>
     </div>
 
@@ -451,6 +501,7 @@ function entrar(googleName, googlePic) {
   document.getElementById('pl-nicho').textContent = clienteData.niche||'—';
   document.getElementById('pl-venc').textContent = clienteData.expires_at?new Date(clienteData.expires_at).toLocaleDateString('pt-BR'):'—';
   document.getElementById('m-rmax').textContent = clienteData.plan==='premium'?6:clienteData.plan==='pro'?4:2;
+  setTimeout(carregarTokens, 500);
   // Preencher nicho padrão no campo
   const nichoInput = document.getElementById('gen-nicho-custom');
   if (nichoInput && clienteData.niche) {
@@ -1477,16 +1528,66 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- REDES SOCIAIS -->
     <div id="tab-redes" style="display:none;">
       <div class="card">
-        <div class="card-head"><div class="card-title">Suas redes sociais</div></div>
-        <div class="nets-grid" id="nets-grid">
-          <div class="net-card"><div class="net-icon">📷</div><div class="net-name">Instagram</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Instagram')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">f</div><div class="net-name">Facebook</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Facebook')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">♪</div><div class="net-name">TikTok</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'TikTok')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">▶</div><div class="net-name">YouTube</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'YouTube')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">in</div><div class="net-name">LinkedIn</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'LinkedIn')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">𝕏</div><div class="net-name">Twitter/X</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Twitter')">Conectar</button></div>
+        <div class="card-head">
+          <div class="card-title">Suas redes sociais</div>
+          <span style="font-size:12px;color:var(--muted);">Conecte para publicação automática</span>
         </div>
-        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.</div>
+        <div class="nets-grid" id="nets-grid">
+          <div class="net-card" id="netcard-Instagram" data-net="Instagram">
+            <div class="net-icon" style="background:linear-gradient(135deg,#C13584,#F56040);color:white;font-size:20px;">📷</div>
+            <div class="net-name">Instagram</div>
+            <div class="net-st" id="netst-Instagram">Não conectado</div>
+            <div class="net-user" id="netuser-Instagram" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-Instagram" onclick="abrirConexao('Instagram')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-Facebook" data-net="Facebook">
+            <div class="net-icon" style="background:#1877F2;color:white;font-size:20px;font-weight:800;">f</div>
+            <div class="net-name">Facebook</div>
+            <div class="net-st" id="netst-Facebook">Não conectado</div>
+            <div class="net-user" id="netuser-Facebook" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-Facebook" onclick="abrirConexao('Facebook')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-TikTok" data-net="TikTok">
+            <div class="net-icon" style="background:#111;color:white;font-size:20px;">♪</div>
+            <div class="net-name">TikTok</div>
+            <div class="net-st" id="netst-TikTok">Não conectado</div>
+            <div class="net-user" id="netuser-TikTok" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-TikTok" onclick="abrirConexao('TikTok')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-YouTube" data-net="YouTube">
+            <div class="net-icon" style="background:#FF0000;color:white;font-size:20px;">▶</div>
+            <div class="net-name">YouTube</div>
+            <div class="net-st" id="netst-YouTube">Não conectado</div>
+            <div class="net-user" id="netuser-YouTube" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-YouTube" onclick="abrirConexao('YouTube')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-LinkedIn" data-net="LinkedIn">
+            <div class="net-icon" style="background:#0A66C2;color:white;font-size:20px;font-weight:800;">in</div>
+            <div class="net-name">LinkedIn</div>
+            <div class="net-st" id="netst-LinkedIn">Não conectado</div>
+            <div class="net-user" id="netuser-LinkedIn" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-LinkedIn" onclick="abrirConexao('LinkedIn')">Configurar</button>
+          </div>
+          <div class="net-card" id="netcard-Twitter" data-net="Twitter">
+            <div class="net-icon" style="background:#111;color:white;font-size:20px;font-weight:800;">𝕏</div>
+            <div class="net-name">Twitter / X</div>
+            <div class="net-st" id="netst-Twitter">Não conectado</div>
+            <div class="net-user" id="netuser-Twitter" style="display:none;font-size:11px;color:var(--green);"></div>
+            <button class="btn-conn" id="netbtn-Twitter" onclick="abrirConexao('Twitter')">Configurar</button>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">
+          ✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.
+          Cada rede requer um token de acesso da sua conta de desenvolvedor.
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONEXÃO DE REDE -->
+    <div id="modal-rede-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:20px;">
+      <div id="modal-rede" style="background:var(--surface);border-radius:20px;padding:28px 32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
+        <button onclick="fecharModalRede()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;">✕</button>
+        <div id="modal-rede-content"></div>
       </div>
     </div>
 
