@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SocialHub Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#18181f;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--accent:#7c5cfc;--accent2:#a78bfa;--green:#34d399;--red:#f87171;--yellow:#fbbf24;--text:#f0f0f8;--muted:#888899;--muted2:#444455;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center;}
+.login-logo .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);}
+.login-logo span{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.login-logo small{font-size:11px;background:rgba(124,92,252,0.15);color:var(--accent2);padding:2px 8px;border-radius:99px;font-weight:500;}
+.login-box h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px;text-align:center;}
+.login-box p{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;}
+.field input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .2s;}
+.field input:focus{outline:none;border-color:var(--accent);}
+.btn-login{width:100%;padding:13px;border-radius:10px;background:var(--accent);border:none;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;transition:all .2s;}
+.btn-login:hover{background:var(--accent2);}
+.login-err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none;}
+
+/* APP */
+.app{display:none;min-height:100vh;}
+.app.visible{display:flex;}
+
+/* SIDEBAR */
+.sb{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0;}
+.sb-head{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.sb-logo{display:flex;align-items:center;gap:8px;}
+.sb-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.sb-logo span{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;}
+.sb-badge{font-size:9px;background:rgba(124,92,252,0.15);color:var(--accent2);padding:2px 7px;border-radius:99px;font-weight:600;margin-left:4px;}
+.sb-nav{padding:12px 8px;flex:1;}
+.sb-sec{font-size:9px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px 4px;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;transition:all .15s;margin-bottom:2px;}
+.ni:hover{background:var(--surface2);color:var(--text);}
+.ni.on{background:rgba(124,92,252,0.12);color:var(--accent2);font-weight:500;}
+.ni .ic{font-size:15px;width:18px;text-align:center;}
+.ni .badge{margin-left:auto;background:var(--red);color:white;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;}
+.sb-foot{padding:12px 8px;border-top:1px solid var(--border);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0;}
+.topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.content{flex:1;overflow-y:auto;padding:20px 24px;}
+
+/* COMPONENTS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);transition:all .15s;}
+.btn:hover{background:var(--surface2);}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:white;}
+.btn.accent:hover{background:var(--accent2);}
+.btn.sm{padding:5px 10px;font-size:11px;}
+.btn.danger{color:var(--red);border-color:rgba(248,113,113,0.3);}
+.btn.danger:hover{background:rgba(248,113,113,0.08);}
+
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.mc .ml{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.mc .mv{font-size:26px;font-weight:700;font-family:'Syne',sans-serif;}
+.mc .md{font-size:11px;color:var(--green);margin-top:4px;}
+.mc .md.warn{color:var(--yellow);}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px;}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
+.lbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 12px;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);}
+td{padding:10px 12px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;}
+.pill.green{background:rgba(52,211,153,0.1);color:#34d399;}
+.pill.red{background:rgba(248,113,113,0.1);color:#f87171;}
+.pill.yellow{background:rgba(251,191,36,0.1);color:#fbbf24;}
+.pill.purple{background:rgba(124,92,252,0.12);color:var(--accent2);}
+.pill.gray{background:rgba(136,136,153,0.1);color:var(--muted);}
+
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+
+.loading{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;padding:20px 0;}
+.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.empty .ei{font-size:36px;margin-bottom:10px;}
+
+.gen-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.gen-bar input,.gen-bar select{padding:7px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;}
+.gen-bar input{flex:1;min-width:150px;}
+
+.panel{display:none;}
+.panel.on{display:block;}
+
+.progress{height:3px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:8px;}
+.progress-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s;}
+
+.revenue-bar{display:flex;flex-direction:column;gap:10px;}
+.rev-item{display:flex;align-items:center;gap:12px;}
+.rev-label{font-size:12px;width:130px;flex-shrink:0;}
+.rev-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;}
+.rev-bar{height:100%;border-radius:99px;}
+.rev-val{font-size:12px;font-weight:600;width:60px;text-align:right;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="dot"></span>
+      <span>SocialHub</span>
+      <small>Admin</small>
+    </div>
+    <h2>Entrar no painel</h2>
+    <p>Acesso restrito — Planeta Digital</p>
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar →</button>
+    <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <aside class="sb">
+    <div class="sb-head">
+      <div class="sb-logo">
+        <span class="dot"></span>
+        <span>SocialHub</span>
+        <span class="sb-badge">Admin</span>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-sec">Principal</div>
+      <div class="ni on" onclick="nav('dash',this)"><span class="ic">⊞</span> Dashboard</div>
+      <div class="ni" onclick="nav('posts',this)"><span class="ic">✦</span> Gerar posts IA</div>
+      <div class="ni" onclick="nav('agenda',this)"><span class="ic">◷</span> Agendados</div>
+      <div class="sb-sec">Negócio</div>
+      <div class="ni" onclick="nav('clients',this)"><span class="ic">◎</span> Clientes <span class="badge" id="badge-clients">0</span></div>
+      <div class="ni" onclick="nav('revenue',this)"><span class="ic">◈</span> Receita</div>
+      <div class="sb-sec">Config</div>
+      <div class="ni" onclick="nav('settings',this)"><span class="ic">◌</span> Configurações</div>
+    </div>
+    <div class="sb-foot">
+      <div class="ni" onclick="doLogout()" style="color:var(--red);"><span class="ic">⇥</span> Sair</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="panel-title">Dashboard</div>
+      <div class="topbar-right">
+        <div style="font-size:12px;color:var(--muted);" id="topbar-url"></div>
+        <button class="btn sm" onclick="loadAll()">↻ Atualizar</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel on" id="panel-dash">
+        <div class="metrics" id="metrics">
+          <div class="mc"><div class="ml">Clientes ativos</div><div class="mv" id="m-ativos">—</div><div class="md" id="m-ativos-d"></div></div>
+          <div class="mc"><div class="ml">Posts agendados</div><div class="mv" id="m-posts">—</div><div class="md"></div></div>
+          <div class="mc"><div class="ml">Receita total</div><div class="mv" id="m-receita">—</div><div class="md green"></div></div>
+          <div class="mc"><div class="ml">Total clientes</div><div class="mv" id="m-total">—</div><div class="md"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Últimos clientes</div><button class="btn sm accent" onclick="nav('clients',document.querySelectorAll('.ni')[3])">Ver todos</button></div>
+          <div id="dash-clients-list"><div class="loading"><div class="spin"></div> Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- GERAR POSTS -->
+      <div class="panel" id="panel-posts">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Gerar posts com IA</div></div>
+          <div class="gen-bar">
+            <select id="gen-client-sel" style="min-width:180px;"><option value="">Selecione um cliente...</option></select>
+            <input type="text" id="gen-niche" placeholder="Nicho (ex: restaurante, moda...)">
+            <select id="gen-tone"><option value="divertido">Divertido</option><option value="profissional">Profissional</option><option value="inspirador">Inspirador</option><option value="urgente">Urgente</option></select>
+            <button class="btn accent" onclick="gerarPosts()" id="gen-btn">✦ Gerar com IA</button>
+          </div>
+          <div id="gen-progress" style="display:none;">
+            <div style="font-size:12px;color:var(--muted);" id="gen-msg">Gerando...</div>
+            <div class="progress"><div class="progress-fill" id="gen-bar" style="width:0%"></div></div>
+          </div>
+          <div id="gen-output" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+
+      <!-- AGENDADOS -->
+      <div class="panel" id="panel-agenda">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Posts agendados</div><button class="btn sm" onclick="loadAgendados()">↻</button></div>
+          <div id="agenda-list"><div class="loading"><div class="spin"></div> Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="panel" id="panel-clients">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Clientes</div>
+            <button class="btn sm accent" onclick="addClienteManual()">+ Adicionar</button>
+          </div>
+          <div id="clients-list"><div class="loading"><div class="spin"></div> Carregando...</div></div>
+        </div>
+        <div class="card" id="client-detail-card" style="display:none;">
+          <div class="card-head">
+            <div class="card-title" id="cd-title">Posts do cliente</div>
+            <button class="btn sm" onclick="document.getElementById('client-detail-card').style.display='none'">✕ Fechar</button>
+          </div>
+          <div id="client-posts-list"></div>
+        </div>
+      </div>
+
+      <!-- RECEITA -->
+      <div class="panel" id="panel-revenue">
+        <div class="metrics">
+          <div class="mc"><div class="ml">MRR estimado</div><div class="mv" id="rev-mrr">—</div><div class="md">recorrente mensal</div></div>
+          <div class="mc"><div class="ml">Ticket médio</div><div class="mv" id="rev-ticket">—</div><div class="md">por cliente</div></div>
+          <div class="mc"><div class="ml">Clientes ativos</div><div class="mv" id="rev-ativos">—</div></div>
+          <div class="mc"><div class="ml">Meta mensal</div><div class="mv">R$2.000</div><div class="md warn">em progresso</div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Receita por plano</div></div>
+          <div class="revenue-bar" id="rev-bars">
+            <div class="loading"><div class="spin"></div> Carregando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="panel" id="panel-settings">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Configurações do sistema</div></div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <div class="lbl" style="margin-bottom:6px;">URL do backend</div>
+              <input style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;" id="settings-url" value="">
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Altere se mudar o endereço do Render</div>
+            </div>
+            <div>
+              <div class="lbl" style="margin-bottom:6px;">Alterar senha do admin</div>
+              <div style="display:flex;gap:8px;">
+                <input type="password" placeholder="Nova senha" id="new-pass" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
+                <button class="btn accent" onclick="alterarSenha()">Salvar</button>
+              </div>
+            </div>
+            <div style="padding:12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.15);border-radius:10px;">
+              <div style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:4px;">✓ Sistema operacional</div>
+              <div style="font-size:12px;color:var(--muted);">Backend conectado · Banco ativo · IA configurada</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Links de pagamento InfinityPay</div></div>
+          <table>
+            <tr><th>Plano</th><th>Link</th><th>Valor</th></tr>
+            <tr><td>Básico</td><td style="font-size:11px;color:var(--muted);">link.infinitepay.io/socialhub/...</td><td><span class="pill green">R$197/mês</span></td></tr>
+            <tr><td>Pro</td><td style="font-size:11px;color:var(--muted);">link.infinitepay.io/socialhub/...</td><td><span class="pill purple">R$397/mês</span></td></tr>
+            <tr><td>Premium</td><td style="font-size:11px;color:var(--muted);">link.infinitepay.io/socialhub/...</td><td><span class="pill yellow">R$697/mês</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURAÇÃO — altere se necessário
+// ============================================================
+let BACKEND = localStorage.getItem('sh_backend') || 'https://socialhub-backend-sqh1.onrender.com';
+const ADMIN_USER = 'admin';
+let ADMIN_PASS = localStorage.getItem('sh_pass') || 'planetadigital2025';
+// ============================================================
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    document.getElementById('topbar-url').textContent = BACKEND;
+    document.getElementById('settings-url').value = BACKEND;
+    loadAll();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-pass').value = '';
+}
+
+function alterarSenha() {
+  const np = document.getElementById('new-pass').value;
+  if (!np || np.length < 6) { alert('Senha deve ter ao menos 6 caracteres.'); return; }
+  ADMIN_PASS = np;
+  localStorage.setItem('sh_pass', np);
+  alert('Senha alterada com sucesso!');
+  document.getElementById('new-pass').value = '';
+}
+
+function nav(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  document.getElementById('panel-'+id).classList.add('on');
+  if (el) el.classList.add('on');
+  const titles = {dash:'Dashboard',posts:'Gerar posts com IA',agenda:'Posts agendados',clients:'Clientes',revenue:'Receita',settings:'Configurações'};
+  document.getElementById('panel-title').textContent = titles[id] || id;
+  if (id === 'agenda') loadAgendados();
+  if (id === 'clients') loadClients();
+  if (id === 'revenue') loadRevenue();
+  if (id === 'posts') loadClientSel();
+}
+
+async function api(path) {
+  try {
+    const r = await fetch(BACKEND + path);
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function loadAll() {
+  const data = await api('/api/dashboard');
+  if (data) {
+    document.getElementById('m-ativos').textContent = data.clientesAtivos ?? '—';
+    document.getElementById('m-posts').textContent = data.postsAgendados ?? '—';
+    const rec = data.receitaTotal ? 'R$' + (data.receitaTotal/100).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
+    document.getElementById('m-receita').textContent = rec;
+    document.getElementById('m-total').textContent = data.totalClientes ?? '—';
+    document.getElementById('badge-clients').textContent = data.clientesAtivos ?? 0;
+  }
+  loadDashClients();
+}
+
+async function loadDashClients() {
+  const clients = await api('/api/clientes');
+  const el = document.getElementById('dash-clients-list');
+  if (!clients || !clients.length) { el.innerHTML = '<div class="empty"><div class="ei">👤</div>Nenhum cliente ainda.</div>'; return; }
+  const colors = ['rgba(124,92,252,0.15)','rgba(52,211,153,0.15)','rgba(248,113,113,0.15)','rgba(251,191,36,0.15)'];
+  const tc = ['var(--accent2)','var(--green)','var(--red)','var(--yellow)'];
+  el.innerHTML = '<table><tr><th>Cliente</th><th>Plano</th><th>Status</th><th>Posts</th><th>Criado</th></tr>' +
+    clients.slice(0,6).map((c,i) => {
+      const ini = (c.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const st = c.status==='active'?'<span class="pill green">Ativo</span>':c.status==='pending'?'<span class="pill yellow">Pendente</span>':'<span class="pill gray">'+c.status+'</span>';
+      const dt = c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') : '—';
+      return `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="background:${colors[i%4]};color:${tc[i%4]};">${ini}</div><div><div style="font-size:13px;font-weight:500;">${c.name}</div><div style="font-size:11px;color:var(--muted);">${c.email||''}</div></div></div></td><td><span class="pill purple">${c.plan||'—'}</span></td><td>${st}</td><td>${c.posts_per_month||0}/mês</td><td>${dt}</td></tr>`;
+    }).join('') + '</table>';
+}
+
+async function loadClients() {
+  const clients = await api('/api/clientes');
+  const el = document.getElementById('clients-list');
+  if (!clients) { el.innerHTML = '<div class="empty">Erro ao carregar clientes.</div>'; return; }
+  if (!clients.length) { el.innerHTML = '<div class="empty"><div class="ei">👤</div>Nenhum cliente cadastrado ainda.</div>'; return; }
+  const colors = ['rgba(124,92,252,0.15)','rgba(52,211,153,0.15)','rgba(248,113,113,0.15)','rgba(251,191,36,0.15)'];
+  const tc = ['var(--accent2)','var(--green)','var(--red)','var(--yellow)'];
+  el.innerHTML = '<table><tr><th>Cliente</th><th>Plano</th><th>Nicho</th><th>Status</th><th>Vencimento</th><th>Ações</th></tr>' +
+    clients.map((c,i) => {
+      const ini = (c.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const st = c.status==='active'?'<span class="pill green">Ativo</span>':c.status==='pending'?'<span class="pill yellow">Pendente</span>':'<span class="pill gray">'+c.status+'</span>';
+      const exp = c.expires_at ? new Date(c.expires_at).toLocaleDateString('pt-BR') : '—';
+      return `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="background:${colors[i%4]};color:${tc[i%4]};">${ini}</div><div><div style="font-size:13px;font-weight:500;">${c.name}</div><div style="font-size:11px;color:var(--muted);">${c.email||''}</div></div></div></td><td><span class="pill purple">${c.plan||'—'}</span></td><td style="font-size:12px;color:var(--muted);">${c.niche||'—'}</td><td>${st}</td><td style="font-size:12px;">${exp}</td><td><div style="display:flex;gap:5px;"><button class="btn sm" onclick="verPosts(${c.id},'${c.name}')">Posts</button><button class="btn sm accent" onclick="gerarParaCliente(${c.id},'${c.niche||''}')">✦ Gerar</button></div></td></tr>`;
+    }).join('') + '</table>';
+}
+
+async function verPosts(id, nome) {
+  const card = document.getElementById('client-detail-card');
+  document.getElementById('cd-title').textContent = 'Posts de ' + nome;
+  document.getElementById('client-posts-list').innerHTML = '<div class="loading"><div class="spin"></div> Carregando...</div>';
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth'});
+  const posts = await api('/api/clientes/'+id+'/posts');
+  if (!posts || !posts.length) { document.getElementById('client-posts-list').innerHTML = '<div class="empty"><div class="ei">📭</div>Nenhum post ainda.</div>'; return; }
+  document.getElementById('client-posts-list').innerHTML = '<table><tr><th>Rede</th><th>Legenda</th><th>Hashtags</th><th>Agendado para</th><th>Status</th></tr>' +
+    posts.map(p => {
+      const dt = p.scheduled_at ? new Date(p.scheduled_at).toLocaleString('pt-BR') : '—';
+      const st = p.status==='published'?'<span class="pill green">Publicado</span>':p.status==='scheduled'?'<span class="pill purple">Agendado</span>':'<span class="pill gray">'+p.status+'</span>';
+      const leg = (p.caption||'').slice(0,60) + ((p.caption||'').length>60?'...':'');
+      return `<tr><td style="font-size:12px;">${p.emoji||''} ${p.network||'—'}</td><td style="font-size:12px;max-width:200px;">${leg}</td><td style="font-size:11px;color:var(--accent2);">${(p.hashtags||'').slice(0,40)}</td><td style="font-size:11px;">${dt}</td><td>${st}</td></tr>`;
+    }).join('') + '</table>';
+}
+
+async function loadAgendados() {
+  const el = document.getElementById('agenda-list');
+  el.innerHTML = '<div class="loading"><div class="spin"></div> Carregando...</div>';
+  const clients = await api('/api/clientes');
+  if (!clients || !clients.length) { el.innerHTML = '<div class="empty"><div class="ei">📅</div>Nenhum post agendado.</div>'; return; }
+  let allPosts = [];
+  for (const c of clients.slice(0,5)) {
+    const posts = await api('/api/clientes/'+c.id+'/posts');
+    if (posts) allPosts.push(...posts.map(p => ({...p, clientName: c.name})));
+  }
+  const agendados = allPosts.filter(p => p.status === 'scheduled').sort((a,b) => new Date(a.scheduled_at)-new Date(b.scheduled_at));
+  if (!agendados.length) { el.innerHTML = '<div class="empty"><div class="ei">📅</div>Nenhum post agendado no momento.</div>'; return; }
+  el.innerHTML = '<table><tr><th>Cliente</th><th>Rede</th><th>Legenda</th><th>Data/Hora</th><th>Status</th></tr>' +
+    agendados.slice(0,20).map(p => {
+      const dt = p.scheduled_at ? new Date(p.scheduled_at).toLocaleString('pt-BR') : '—';
+      const leg = (p.caption||'').slice(0,50)+'...';
+      return `<tr><td style="font-size:12px;font-weight:500;">${p.clientName}</td><td style="font-size:12px;">${p.emoji||''} ${p.network||'—'}</td><td style="font-size:12px;">${leg}</td><td style="font-size:11px;">${dt}</td><td><span class="pill purple">Agendado</span></td></tr>`;
+    }).join('') + '</table>';
+}
+
+async function loadRevenue() {
+  const data = await api('/api/dashboard');
+  const clients = await api('/api/clientes');
+  if (!data || !clients) return;
+  const ativos = clients.filter(c => c.status === 'active');
+  const planos = {basico:0, pro:0, premium:0};
+  ativos.forEach(c => { if(planos[c.plan]!==undefined) planos[c.plan]++; });
+  const mrr = (planos.basico*197 + planos.pro*397 + planos.premium*697);
+  const ticket = ativos.length ? Math.round(mrr/ativos.length) : 0;
+  document.getElementById('rev-mrr').textContent = 'R$'+mrr.toLocaleString('pt-BR');
+  document.getElementById('rev-ticket').textContent = 'R$'+ticket.toLocaleString('pt-BR');
+  document.getElementById('rev-ativos').textContent = ativos.length;
+  const maxVal = Math.max(planos.basico*197, planos.pro*397, planos.premium*697, 1);
+  document.getElementById('rev-bars').innerHTML = [
+    {label:'Básico (R$197)', val:planos.basico*197, count:planos.basico, color:'#1D9E75'},
+    {label:'Pro (R$397)', val:planos.pro*397, count:planos.pro, color:'#7c5cfc'},
+    {label:'Premium (R$697)', val:planos.premium*697, count:planos.premium, color:'#D85A30'},
+  ].map(r => `<div class="rev-item"><div class="rev-label" style="font-size:12px;">${r.label} · <span style="color:var(--muted);">${r.count} cliente(s)</span></div><div class="rev-bar-wrap"><div class="rev-bar" style="width:${Math.round(r.val/maxVal*100)}%;background:${r.color};"></div></div><div class="rev-val">R$${r.val.toLocaleString('pt-BR')}</div></div>`).join('');
+}
+
+async function loadClientSel() {
+  const clients = await api('/api/clientes');
+  const sel = document.getElementById('gen-client-sel');
+  if (!clients) return;
+  sel.innerHTML = '<option value="">Selecione um cliente...</option>' + clients.map(c => `<option value="${c.id}" data-niche="${c.niche||''}">${c.name}</option>`).join('');
+  sel.onchange = () => {
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById('gen-niche').value = opt.dataset.niche || '';
+  };
+}
+
+async function gerarPosts() {
+  const clientId = document.getElementById('gen-client-sel').value;
+  if (!clientId) { alert('Selecione um cliente!'); return; }
+  const btn = document.getElementById('gen-btn');
+  const prog = document.getElementById('gen-progress');
+  const bar = document.getElementById('gen-bar');
+  const msg = document.getElementById('gen-msg');
+  const out = document.getElementById('gen-output');
+  btn.disabled = true;
+  prog.style.display = 'block';
+  out.innerHTML = '';
+  const msgs = ['Analisando o nicho...','Criando linha editorial...','Redigindo legendas...','Selecionando hashtags...','Finalizando...'];
+  let mi = 0;
+  const iv = setInterval(() => {
+    msg.textContent = msgs[Math.min(mi, msgs.length-1)];
+    bar.style.width = Math.min((mi+1)/msgs.length*85, 85)+'%';
+    mi++;
+  }, 800);
+  try {
+    const r = await fetch(BACKEND+'/api/clientes/'+clientId+'/gerar-posts', {method:'POST'});
+    const d = await r.json();
+    clearInterval(iv);
+    bar.style.width = '100%';
+    msg.textContent = 'Posts gerados com sucesso!';
+    setTimeout(() => { prog.style.display='none'; }, 1500);
+    const posts = await api('/api/clientes/'+clientId+'/posts');
+    if (posts && posts.length) {
+      out.innerHTML = posts.slice(-5).map(p => `<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:18px;">${p.emoji||'📱'}</span><span style="font-size:12px;font-weight:500;">${p.network||'—'}</span><span style="font-size:11px;color:var(--muted);margin-left:auto;">${p.scheduled_at?new Date(p.scheduled_at).toLocaleString('pt-BR'):''}</span></div><div style="font-size:13px;color:var(--text);margin-bottom:6px;">${p.caption||''}</div><div style="font-size:11px;color:var(--accent2);">${p.hashtags||''}</div></div>`).join('');
+    }
+  } catch(e) {
+    clearInterval(iv);
+    prog.style.display = 'none';
+    out.innerHTML = '<div style="color:var(--red);font-size:13px;">Erro ao gerar posts. Verifique o backend.</div>';
+  }
+  btn.disabled = false;
+}
+
+async function gerarParaCliente(id, niche) {
+  nav('posts', document.querySelectorAll('.ni')[1]);
+  await loadClientSel();
+  document.getElementById('gen-client-sel').value = id;
+  if (niche) document.getElementById('gen-niche').value = niche;
+}
+
+function addClienteManual() {
+  const nome = prompt('Nome do cliente:');
+  if (!nome) return;
+  const email = prompt('E-mail do cliente:');
+  if (!email) return;
+  alert('Para adicionar clientes via API, use o endpoint POST /api/clientes no seu backend. Por agora, oriente o cliente a se cadastrar pela página de vendas.');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-wrap').style.display !== 'none') doLogin();
+});
+</script>
+</body>
+</html>
