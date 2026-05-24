@@ -6,6 +6,7 @@
 <title>SocialHub — Meu Painel</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{--bg:#f4f4f9;--surface:#fff;--surface2:#f0f0f7;--border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);--accent:#7c5cfc;--accent2:#a78bfa;--green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--text:#111118;--muted:#666677;--muted2:#aaaabc;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -270,6 +271,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* TOAST */
 .sh-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:white;padding:12px 24px;border-radius:99px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90vw;}
 .sh-toast.show{opacity:1;}
+
+/* TEMPLATE RETRO */
+.retro-slide-tpl{position:fixed;left:-9999px;top:0;width:1080px;height:1080px;background:#F5E8C8;font-family:'Arial Black','Impact',sans-serif;overflow:hidden;box-sizing:border-box;}
+.retro-slide-tpl *{box-sizing:border-box;}
 </style>
 </head>
 <body>
@@ -545,7 +550,7 @@ function deveWatermark() {
   return !clienteData || clienteData.plan === 'basico' || !['pro','premium'].includes(clienteData.plan);
 }
 function limparTextoSlide(t) {
-  return (t||'').replace(/^slide\s*\d+\s*[:\-–]?\s*/i,'').replace(/#[^\s]+/g,'').trim();
+  return (t||'').replace(/^slide\s*\d+\s*[:\-\u2013]?\s*/i,'').replace(/#[^\s]+/g,'').trim();
 }
 function wrapText(ctx, text, maxW, maxLines) {
   const words = limparTextoSlide(text).split(' ').filter(Boolean);
@@ -558,207 +563,87 @@ function wrapText(ctx, text, maxW, maxLines) {
   if(line.trim()&&lines.length<maxLines) lines.push(line.trim());
   return lines;
 }
-function desenharCard(canvasEl, imgEl, emoji, titulo, network, _h) {
-  const W=canvasEl.width=1080, H=canvasEl.height=1080;
-  const ctx=canvasEl.getContext('2d');
-  if(imgEl){
-    const r=Math.max(W/imgEl.naturalWidth,H/imgEl.naturalHeight);
-    ctx.drawImage(imgEl,(W-imgEl.naturalWidth*r)/2,(H-imgEl.naturalHeight*r)/2,imgEl.naturalWidth*r,imgEl.naturalHeight*r);
-  } else {
-    ctx.fillStyle='#1a1a2e'; ctx.fillRect(0,0,W,H);
-  }
-  // Gradiente só nos 28% inferiores
-  const grad=ctx.createLinearGradient(0,H*0.62,0,H);
-  grad.addColorStop(0,'rgba(0,0,0,0)');
-  grad.addColorStop(0.4,'rgba(0,0,0,0.75)');
-  grad.addColorStop(1,'rgba(0,0,0,0.93)');
-  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
-  // Texto — fundo semitransparente + quebra de linha no rodapé
+
+const RETRO_PAL = { bg:'#F5E8C8', dark:'#1A2744', teal:'#1E4D6B', rust:'#A63B2D', cream:'#FDF6E3' };
+const NET_PAL = {
+  Instagram:{accent:'#C13584',teal:'#6B1E4D'},
+  Facebook:{accent:'#1877F2',teal:'#1E3D6B'},
+  TikTok:{accent:'#111',teal:'#1E4D4D'},
+  YouTube:{accent:'#FF0000',teal:'#6B1E1E'},
+  LinkedIn:{accent:'#0A66C2',teal:'#1E3D6B'},
+  default:{accent:'#7c5cfc',teal:'#2D1E6B'}
+};
+
+async function renderizarSlideRetro(canvasEl, titulo, network) {
+  const pal = NET_PAL[network]||NET_PAL.default;
   const clean = limparTextoSlide(titulo);
-  const fontSize = clean.length > 60 ? 38 : clean.length > 40 ? 44 : 52;
-  ctx.font=`bold ${fontSize}px sans-serif`;
-  ctx.textAlign='center';
-  const lines=wrapText(ctx,clean,W-120,4);
-  const lh=fontSize*1.3;
-  const textH=lines.length*lh+20;
-  const boxY=H-textH-(deveWatermark()?90:60);
-  // Fundo do texto
-  ctx.fillStyle='rgba(0,0,0,0.45)';
-  ctx.beginPath(); ctx.roundRect(40,boxY-20,W-80,textH+16,16); ctx.fill();
-  // Linhas do texto
-  ctx.fillStyle='white';
-  lines.forEach((ln,i)=>ctx.fillText(ln,W/2,boxY+i*lh+fontSize));
-  // Watermark
-  if(deveWatermark()){
-    ctx.font='bold 26px sans-serif'; ctx.fillStyle='rgba(255,255,255,0.28)';
-    ctx.fillText('✦ SocialHub',W/2,H-28);
-  }
-}
+  const numMatch = clean.match(/^(\d+)[.\)\s]/);
+  const numero = numMatch ? numMatch[1] : null;
+  const semNum = numero ? clean.replace(/^\d+[.\)\s]+/,'').trim() : clean;
+  const palavras = semNum.split(' ');
+  const mid = Math.ceil(palavras.length/2);
+  const l1 = palavras.slice(0,mid).join(' ');
+  const l2 = palavras.slice(mid).join(' ');
+  const partes = semNum.split(/[\n]/).map(s=>s.trim()).filter(Boolean);
 
-// Fallback: card com gradiente (sem foto)
-function desenharCardGradiente(canvasEl, emoji, titulo, network, hashtags) {
-  const nets={Instagram:['#C13584','#833AB4'],Facebook:['#1877F2','#0a5fc7'],TikTok:['#111','#333'],YouTube:['#FF0000','#cc0000'],LinkedIn:['#0A66C2','#004182'],default:['#7c5cfc','#534AB7']};
-  const [c1,c2]=nets[network]||nets.default;
-  const W=canvasEl.width=1080,H=canvasEl.height=1080;
-  const ctx=canvasEl.getContext('2d');
-  const g=ctx.createLinearGradient(0,0,W,H);
-  g.addColorStop(0,c1);g.addColorStop(1,c2);
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  desenharCard(canvasEl,null,emoji,titulo,network,hashtags);
-}
+  const tpl = document.createElement('div');
+  tpl.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1080px;overflow:hidden;background:'+RETRO_PAL.bg+';font-family:"Arial Black",Arial,sans-serif;';
 
-// Função principal: busca foto real e desenha
-async function gerarCardCanvas(canvasEl, emoji, caption, network, hashtags, tipo) {
-  // Mostrar loading no canvas
-  const W = canvasEl.width = 1080;
-  const H = canvasEl.height = 1080;
-  const ctx = canvasEl.getContext('2d');
-  ctx.fillStyle = '#1a1a2e';
-  ctx.fillRect(0,0,W,H);
-  ctx.font = '48px sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.textAlign = 'center';
-  ctx.fillText('Carregando foto...', W/2, H/2);
-
-  // Buscar foto real pelo backend
-  const assuntoEl = document.getElementById('gen-assunto');
-  const nichoEl = document.getElementById('gen-nicho-custom');
-  const assunto = assuntoEl?.value?.trim() || '';
-  const nicho = nichoEl?.value?.trim() || clienteData?.niche || '';
-  const keywords = (assunto + ' ' + nicho).trim() || caption.replace(/[^a-zA-ZÀ-ú0-9 ]/g,' ').trim().split(' ').slice(0,3).join(' ');
-  try {
-    const resp = await fetch(BACKEND+'/api/imagem?q='+encodeURIComponent(keywords));
-    const data = await resp.json();
-    if (data.url) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => desenharCard(canvasEl, img, emoji, caption, network, hashtags);
-      img.onerror = () => desenharCardGradiente(canvasEl, emoji, caption, network, hashtags);
-      img.src = data.url;
-    } else {
-      desenharCardGradiente(canvasEl, emoji, caption, network, hashtags);
-    }
-  } catch(e) {
-    desenharCardGradiente(canvasEl, emoji, caption, network, hashtags);
-  }
-}
-
-function baixarCard(canvasEl, network) {
-  const link = document.createElement('a');
-  link.download = 'post-'+network.toLowerCase()+'-socialhub.png';
-  link.href = canvasEl.toDataURL('image/png');
-  link.click();
-}
-
-function abrirPublicarCard(canvasId, network) {
-  const cv = document.getElementById(canvasId);
-  const caption = cv ? cv.dataset.caption : '';
-  const hashtags = cv ? cv.dataset.hash : '';
-  abrirPublicar(caption, hashtags, network);
-}
-
-function abrirPublicar(caption, hashtags, network) {
-  const texto = encodeURIComponent((caption||'') + '\n\n' + (hashtags||''));
-  const urls = {
-    Instagram: 'https://www.instagram.com/',
-    Facebook: 'https://www.facebook.com/',
-    TikTok: 'https://www.tiktok.com/',
-    LinkedIn: 'https://www.linkedin.com/sharing/share-offsite/?url='+encodeURIComponent(caption||''),
-    Twitter: 'https://twitter.com/intent/tweet?text='+texto
-  };
-  alert('📋 Legenda copiada! Cole na rede social que vai abrir.\n\nLembre de baixar a imagem também.');
-  navigator.clipboard?.writeText((caption||'')+'\n\n'+(hashtags||''));
-  window.open(urls[network]||'https://www.instagram.com/', '_blank');
-}
-
-function netClass(r){return {Instagram:'ig',Facebook:'fb',TikTok:'tt',YouTube:'yt',LinkedIn:'li','Twitter/X':'tw',Twitter:'tw'}[r]||'';}
-
-let _cardId = 0;
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;'); }
-function postCard(p, isVideo) {
-  const cid = 'cv'+(++_cardId);
-  const dt = p.scheduled_at?new Date(p.scheduled_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  const stClass = p.status==='published'?'st-pub':'st-sched';
-  const stLabel = p.status==='published'?'Publicado':'Agendado';
-  const nc = netClass(p.network);
-  const actions = p.status==='scheduled'
-    ? `<button class="pabtn green" onclick="aprovar(this)">✓ Aprovar</button><button class="pabtn" onclick="editarPost(${p.id})">Editar</button>`
-    : '';
-
-  if (isVideo || p.tipo==='video') {
-    return `<div class="post-visual">
-      <div class="video-thumb">
-        <div class="play-btn">▶</div>
-        <div class="video-label">🎬 Roteiro gerado pela IA</div>
-        <div class="video-duration">~60s</div>
-      </div>
-      <div class="post-body">
-        <div class="post-meta"><span class="post-net-badge ${nc}">${p.network||'—'}</span><span class="post-time">${dt}</span><span class="post-status-badge ${stClass}">${stLabel}</span></div>
-        <div class="post-caption">${p.caption||''}</div>
-        ${p.script?`<div class="script-box">📝 <strong>Roteiro:</strong><br>${p.script}</div>`:''}
-        <div class="post-tags">${p.hashtags||''}</div>
-        <div class="post-actions-row">${actions}</div>
-      </div>
-    </div>`;
-  }
-
-  const kw = p.img_keywords||(p.niche||clienteData?.niche||'business')+' '+p.network;
-  const safeEmoji = (p.emoji||'📱').replace(/['"]/g,'');
-  const safeCaption = (p.caption||'').replace(/['"\\]/g,' ').slice(0,120);
-  const safeNet = (p.network||'Post').replace(/['"]/g,'');
-  const safeHash = (p.hashtags||'').replace(/['"]/g,'').slice(0,80);
-  const safeDlNet = (p.network||'post').replace(/'/g,'');
-  const dlBar = `<div class="post-dl-bar" data-cid="${cid}" data-net="${safeDlNet}">
-    <button class="btn-dl" onclick="var d=this.closest('[data-cid]');baixarCard(document.getElementById(d.dataset.cid),d.dataset.net)">⬇ Baixar</button>
-    <button class="btn-post-ig" onclick="var d=this.closest('[data-cid]');abrirPublicarCard(d.dataset.cid,d.dataset.net)">→ Publicar</button>
-  </div>`;
-  setTimeout(()=>{const cv=document.getElementById(cid);if(cv)gerarCardCanvas(cv,cv.dataset.emoji,cv.dataset.caption,cv.dataset.net,cv.dataset.hash,'post');},50);
-  return `<div class="post-visual">
-    <canvas class="post-canvas" id="${cid}" width="1080" height="1080" title="Clique para baixar" data-emoji="${safeEmoji}" data-caption="${safeCaption}" data-net="${safeNet}" data-hash="${safeHash}" onclick="baixarCard(this,this.dataset.net)"></canvas>
-    <div class="post-body">
-      <div class="post-meta"><span class="post-net-badge ${nc}">${p.network||'—'}</span><span class="post-time">${dt}</span><span class="post-status-badge ${stClass}">${stLabel}</span></div>
-      <div class="post-caption">${p.caption||''}</div>
-      <div class="post-tags">${p.hashtags||''}</div>
-      <div class="post-actions-row">${!mini?actions:''}</div>
+  tpl.innerHTML = `<div style="width:1080px;height:1080px;background:${RETRO_PAL.bg};position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(0,0,0,0.015) 0,rgba(0,0,0,0.015) 1px,transparent 1px,transparent 9px);"></div>
+    <div style="position:absolute;top:20px;left:20px;right:20px;bottom:20px;border:3px dashed rgba(30,77,107,0.18);border-radius:10px;"></div>
+    <div style="position:absolute;top:28px;right:60px;font-size:60px;opacity:0.25;">❄️</div>
+    <div style="position:absolute;top:28px;left:60px;font-size:44px;opacity:0.2;">✦</div>
+    <div style="padding:64px 72px 0;">
+      ${numero?`<div style="display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:${pal.teal};border:4px solid ${RETRO_PAL.cream};margin-bottom:14px;box-shadow:0 4px 16px rgba(0,0,0,0.25);"><span style="font-size:38px;font-weight:900;color:white;font-family:'Arial Black',Arial;">${numero}</span></div>`:''}
+      <div style="font-size:${l1.length>14?72:82}px;font-weight:900;color:${RETRO_PAL.dark};line-height:1.0;letter-spacing:-1px;text-transform:uppercase;">${l1}</div>
+      ${l2?`<div style="display:inline-block;background:${pal.accent};padding:8px 22px 12px;margin:8px 0 0;border-radius:5px;"><span style="font-size:${l2.length>14?62:72}px;font-weight:900;color:white;line-height:1.0;text-transform:uppercase;">${l2}</span></div>`:''}
     </div>
-    ${!mini?dlBar:''}
+    <div style="margin:20px 72px 0;height:3px;background:linear-gradient(to right,${pal.teal},transparent);border-radius:2px;"></div>
+    <div style="padding:22px 72px 0;display:flex;flex-direction:column;gap:16px;">
+      ${partes.slice(1,5).map(item=>{
+        const pts=item.split(' - ');
+        return `<div style="display:flex;align-items:flex-start;gap:18px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:${pal.teal};flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;">
+            <div style="width:16px;height:16px;border-radius:50%;background:white;"></div>
+          </div>
+          <div>
+            <div style="font-size:28px;font-weight:900;color:${RETRO_PAL.dark};text-transform:uppercase;letter-spacing:0.3px;">${pts[0]}</div>
+            ${pts[1]?`<div style="font-size:22px;color:#555;font-family:Arial,sans-serif;font-weight:normal;margin-top:2px;">${pts[1]}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="position:absolute;bottom:50px;left:55px;right:55px;background:${pal.teal};border-radius:14px;padding:20px 30px;display:flex;align-items:center;gap:16px;">
+      <div style="font-size:32px;">💡</div>
+      <div style="font-size:22px;color:white;font-weight:900;line-height:1.3;">${network} · ${deveWatermark()?'✦ SocialHub · ':''}Engaje e cresça! 🚀</div>
+    </div>
   </div>`;
+
+  document.body.appendChild(tpl);
+  try {
+    const rendered = await html2canvas(tpl.firstElementChild, {
+      width:1080, height:1080, scale:1, useCORS:true, logging:false, backgroundColor:RETRO_PAL.bg
+    });
+    document.body.removeChild(tpl);
+    canvasEl.width=1080; canvasEl.height=1080;
+    canvasEl.getContext('2d').drawImage(rendered,0,0,1080,1080);
+  } catch(e) {
+    document.body.removeChild(tpl);
+    const ctx=canvasEl.getContext('2d');
+    canvasEl.width=1080;canvasEl.height=1080;
+    ctx.fillStyle=RETRO_PAL.bg;ctx.fillRect(0,0,1080,1080);
+    ctx.font='bold 48px Arial';ctx.fillStyle=RETRO_PAL.dark;ctx.textAlign='center';
+    const wlines=wrapText(ctx,clean,900,5);
+    wlines.forEach((l,i)=>ctx.fillText(l,540,300+i*70));
+  }
 }
 
-function aprovar(btn) { btn.textContent='✓ Aprovado'; btn.className='pabtn approved'; btn.disabled=true; }
-function editarPost(id) {
-  const nova = prompt('Editar legenda do post:');
-  if(nova) alert('Salvo! Em produção isso atualiza no banco de dados.');
-}
+async function desenharCard(cv,img,emoji,titulo,network){ await renderizarSlideRetro(cv,titulo,network); }
+function desenharCardGradiente(cv,emoji,titulo,network){ renderizarSlideRetro(cv,titulo,network); }
+async function gerarCardCanvas(cv,emoji,cap,network){ await renderizarSlideRetro(cv,cap,network); }
+function desenharCardComBase(cv,base,titulo,network){ renderizarSlideRetro(cv,titulo,network); }
 
-function renderDashPosts() {
-  const el = document.getElementById('dash-posts');
-  const prox = todosPosts.filter(p=>p.status==='scheduled').slice(0,4);
-  el.innerHTML = prox.length ? prox.map(p=>postCard(p)).join('') : '<div class="empty-box"><div class="ei">📭</div>Nenhum post agendado ainda.<br><small>Nossa IA está preparando seu conteúdo!</small></div>';
-}
-
-function renderTodosPosts() {
-  const el = document.getElementById('all-posts');
-  const f = document.getElementById('filter-status')?.value||'';
-  const lista = f?todosPosts.filter(p=>p.status===f):todosPosts;
-  el.innerHTML = lista.length ? lista.map(p=>postCard(p)).join('') : '<div class="empty-box"><div class="ei">📭</div>Nenhum post encontrado.</div>';
-}
-
-// ========= CRIAR CONTEÚDO COM IA =========
-function selTipo(el, tipo) {
-  document.querySelectorAll('.gen-type-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-  tipoSelecionado = tipo;
-  const labels = {imagem:'Gerar post com imagem',carrossel:'Gerar carrossel',video:'Gerar roteiro de vídeo',stories:'Gerar Stories'};
-  document.getElementById('btn-gen-txt').textContent = labels[tipo]||'Gerar com IA';
-}
-
-// ===================================================
-// GERAÇÃO DE CONTEÚDO — painel profissional completo
-// ===================================================
-
-// Estado global do painel criador
-const _criador = { id: null, slides: [], texts: [], photoUrls: [], currentSlide: 0, rede: 'Instagram', redes: ['Instagram'], parsed: null };
 
 async function gerarConteudo() {
   const assunto = document.getElementById('gen-assunto')?.value.trim() || '';
@@ -811,27 +696,135 @@ async function gerarConteudo() {
 }
 
 function renderVideo(container, parsed, rede) {
+  const vidID = 'vid'+Date.now();
+  const roteiro = (parsed.roteiro||'').replace(/\\n/g,'\n').replace(/\//g,'');
+  const narracaoTexto = (parsed.legenda||'') + '. ' + roteiro.replace(/\([^)]+\)/g,'').replace(/Cena \d+[^:]+:/g,'').replace(/\n/g,' ');
   container.innerHTML = `
-    <div class="painel-criador" style="grid-column:1/-1;">
+    <div class="painel-criador" id="${vidID}" style="grid-column:1/-1;">
       <div class="pc-video-card">
-        <div class="pc-video-thumb">
-          <div class="pc-play">▶</div>
-          <div class="pc-video-lbl">🎬 Roteiro gerado pela IA · ~60s</div>
+        <div class="pc-video-thumb" style="background:linear-gradient(135deg,#1a1a2e,#16213e);">
+          <canvas id="cvvid_${vidID}" width="1080" height="1080" style="width:100%;height:100%;display:block;border-radius:0;"></canvas>
+          <div id="vid_status_${vidID}" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:white;padding:12px 16px;font-size:14px;text-align:center;display:none;"></div>
         </div>
         <div class="pc-body">
-          <div class="pc-caption-edit" contenteditable="true" id="vid-legenda">${parsed.legenda||''}</div>
-          <div style="margin:8px 0;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.7;color:var(--muted);">
-            <strong style="color:var(--text);">📝 Roteiro:</strong><br>${(parsed.roteiro||'').replace(/\\n/g,'<br>').replace(/\n/g,'<br>')}
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Legenda do post</div>
+            <div class="pc-caption-edit" contenteditable="true" id="vid-legenda-${vidID}">${parsed.legenda||''}</div>
           </div>
-          ${parsed.dicas?`<div style="padding:8px 10px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534;margin-bottom:8px;">💡 ${parsed.dicas}</div>`:''}
-          <div class="pc-tags" contenteditable="true" id="vid-tags">${parsed.hashtags||''}</div>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <button class="pabtn green" onclick="salvarPost(this)">✓ Salvar e agendar</button>
-            <button class="pabtn" onclick="this.closest('.painel-criador').remove()">Descartar</button>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">📝 Roteiro do vídeo</div>
+            <div style="font-size:13px;line-height:1.7;color:var(--text);" id="roteiro-${vidID}">${(parsed.roteiro||'').replace(/\\n/g,'<br>').replace(/\n/g,'<br>')}</div>
+            ${parsed.dicas?`<div style="margin-top:8px;padding:8px 10px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534;">💡 ${parsed.dicas}</div>`:''}
+          </div>
+          <div class="pc-tags" contenteditable="true" id="vid-tags-${vidID}">${parsed.hashtags||''}</div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            <button class="pabtn green" onclick="gerarVideoReal('${vidID}')" id="btnvid_${vidID}" style="background:var(--accent);color:white;border:none;">
+              🎬 Gerar vídeo com voz em PT-BR
+            </button>
+            <button class="pabtn" onclick="salvarPost(this)">✓ Salvar e agendar</button>
+            <button class="pabtn" onclick="document.getElementById('${vidID}').remove()">Descartar</button>
           </div>
         </div>
       </div>
     </div>`;
+
+  // Desenhar capa do vídeo
+  const cv = document.getElementById('cvvid_'+vidID);
+  if(cv) renderizarSlideRetro(cv, parsed.legenda||'Vídeo gerado pela IA', rede);
+}
+
+async function gerarVideoReal(vidID) {
+  const btn = document.getElementById('btnvid_'+vidID);
+  const status = document.getElementById('vid_status_'+vidID);
+  const rotetiroEl = document.getElementById('roteiro-'+vidID);
+  const legendaEl = document.getElementById('vid-legenda-'+vidID);
+
+  if(btn){ btn.textContent='⏳ Gerando vídeo...'; btn.disabled=true; }
+  if(status){ status.style.display='block'; status.textContent='🎤 Preparando narração em português...'; }
+
+  try {
+    // Verificar suporte
+    if(!window.MediaRecorder || !window.speechSynthesis){
+      throw new Error('Seu navegador não suporta gravação. Use Chrome ou Edge.');
+    }
+
+    const cv = document.getElementById('cvvid_'+vidID);
+    if(!cv) throw new Error('Canvas não encontrado');
+
+    // Texto para falar
+    const textoCompleto = (legendaEl?.textContent||'') + '. ' +
+      (rotetiroEl?.textContent||'').replace(/Cena \d+[^:]*:/g,'').slice(0,500);
+
+    // Configurar stream do canvas
+    const stream = cv.captureStream(30);
+
+    // Adicionar áudio via Web Speech API + AudioContext
+    const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const dest = audioCtx.createMediaStreamDestination();
+    stream.addTrack(dest.stream.getAudioTracks()[0]);
+
+    // Iniciar gravação
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9,opus' });
+    const chunks = [];
+    recorder.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, {type:'video/webm'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'video-socialhub.webm'; a.click();
+      URL.revokeObjectURL(url);
+      if(btn){ btn.textContent='✓ Vídeo baixado!'; btn.style.background='var(--green)'; }
+      if(status){ status.textContent='✓ Vídeo gerado e baixado com sucesso!'; status.style.background='rgba(22,163,74,0.8)'; }
+    };
+
+    recorder.start();
+    if(status) status.textContent='🎤 Narrando em português...';
+
+    // Narrar com Web Speech API
+    await new Promise((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(textoCompleto);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+
+      // Tentar voz em português
+      const vozes = window.speechSynthesis.getVoices();
+      const vozPT = vozes.find(v=>v.lang.startsWith('pt'))|| vozes.find(v=>v.lang.includes('BR'));
+      if(vozPT) utterance.voice = vozPT;
+
+      // Animar canvas durante narração
+      let frame = 0;
+      const animInterval = setInterval(()=>{
+        if(cv && status){
+          frame++;
+          // Pulsar borda para indicar que está gravando
+          const ctx = cv.getContext('2d');
+          ctx.save();
+          ctx.strokeStyle = `rgba(124,92,252,${0.5+0.5*Math.sin(frame*0.15)})`;
+          ctx.lineWidth = 16;
+          ctx.strokeRect(8,8,cv.width-16,cv.height-16);
+          ctx.restore();
+        }
+      }, 33);
+
+      utterance.onend = () => {
+        clearInterval(animInterval);
+        // Aguardar 1s extra e parar gravação
+        setTimeout(()=>{ recorder.stop(); }, 1000);
+        resolve();
+      };
+      utterance.onerror = () => { clearInterval(animInterval); resolve(); };
+
+      speechSynthesis.speak(utterance);
+    });
+
+  } catch(e) {
+    if(btn){ btn.textContent='🎬 Gerar vídeo com voz em PT-BR'; btn.disabled=false; }
+    if(status){ status.textContent='⚠️ '+e.message; status.style.background='rgba(220,38,38,0.7)'; }
+    // Fallback: só baixar imagem de capa
+    showToast('Dica: Abra no Chrome para geração de vídeo com voz completa');
+  }
 }
 
 // ===================================================
@@ -1229,56 +1222,89 @@ function renderNetCards() {
 
 const _tokens = {};
 
+// OAuth platforms config
+const OAUTH_PLATFORMS = {
+  Instagram: { type:'meta', label:'Entrar com Facebook', color:'#1877F2', icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' },
+  Facebook:  { type:'meta', label:'Entrar com Facebook', color:'#1877F2', icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' },
+  LinkedIn:  { type:'linkedin', label:'Entrar com LinkedIn', color:'#0A66C2', icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' },
+  Twitter:   { type:'twitter', label:'Entrar com Twitter/X', color:'#000', icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.932-9.077-8.38-11.423H8.264l4.337 5.735L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+};
+const META_CONFIGURED = !!(window.FACEBOOK_APP_ID || false); // set by backend config check
+
 function abrirConexao(rede) {
   const r = REDES_CONFIG.find(x=>x.id===rede); if(!r) return;
+  const oAuth = OAUTH_PLATFORMS[rede];
+  const connected = !!_tokens[rede];
   const content = document.getElementById('modal-rede-content');
+  const gradBg = r.cls==='bi-ig' ? 'linear-gradient(135deg,#C13584,#F56040)' : r.cls==='bi-fb' ? '#1877F2' : r.cls==='bi-tt' ? '#111' : r.cls==='bi-yt' ? '#FF0000' : r.cls==='bi-li' ? '#0A66C2' : '#111';
 
   content.innerHTML = `
-    <div style="padding:24px 28px;">
-      <button onclick="fecharModalRede()" style="position:absolute;top:16px;right:18px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;z-index:1;">✕</button>
-
-      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:24px;">
-        <div style="width:64px;height:64px;border-radius:16px;background:${r.cor};color:white;font-size:30px;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:12px;">${r.icon}</div>
+    <div style="padding:24px 28px;position:relative;">
+      <button onclick="fecharModalRede()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;">✕</button>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:22px;">
+        <div style="width:64px;height:64px;border-radius:16px;background:${gradBg};display:flex;align-items:center;justify-content:center;margin-bottom:12px;">${NET_ICONS[rede]||''}</div>
         <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;">Conectar ${r.nome}</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:4px;">${r.descricao}</div>
+        ${connected ? `<div style="margin-top:6px;font-size:13px;color:#16a34a;font-weight:500;">✓ Conectado como @${_tokens[rede]?.username}</div>` : `<div style="font-size:13px;color:var(--muted);margin-top:4px;">${r.descricao}</div>`}
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-        <div>
-          <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Usuário / Nome da Conta</label>
-          <div style="position:relative;">
-            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">@</span>
-            <input type="text" id="inp_${rede}_user" placeholder="seuperfil"
-              style="width:100%;padding:11px 12px 11px 28px;border:1.5px solid var(--border2);border-radius:10px;background:var(--bg);font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;box-sizing:border-box;"
-              onkeydown="if(event.key==='Enter')confirmarConexao('${rede}')">
-          </div>
-        </div>
+      ${oAuth ? `
+      <button onclick="iniciarOAuth('${rede}')" id="btnOAuth_${rede}"
+        style="width:100%;padding:14px;border-radius:12px;background:${oAuth.color};border:none;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+        ${oAuth.icon} ${oAuth.label}
+      </button>
+      <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:16px;">— ou entre com usuário manualmente —</div>
+      ` : ''}
 
-        <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">
-            ${r.id==='Instagram'||r.id==='Facebook' ?
-              '💡 <strong>Dica:</strong> Para publicação automática real, o Instagram e Facebook exigem aprovação de app pela Meta. O usuário conectado aqui será usado para identificação e para quando você publicar manualmente.' :
-              '💡 Conecte sua conta para identificação. A publicação automática fica ativa após configurar as permissões de API.'}
-          </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Usuário da conta</label>
+        <div style="position:relative;">
+          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);">@</span>
+          <input type="text" id="inp_${rede}_user" placeholder="seuperfil" value="${_tokens[rede]?.username||''}"
+            style="width:100%;padding:11px 12px 11px 28px;border:1.5px solid var(--border2);border-radius:10px;background:var(--bg);font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;box-sizing:border-box;"
+            onkeydown="if(event.key==='Enter')confirmarConexao('${rede}')">
         </div>
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button onclick="confirmarConexao('${rede}')" id="btnSalvar_${rede}"
-          style="flex:1;min-width:140px;padding:13px;border-radius:11px;background:${r.cor};border:none;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
-          ✓ Conectar ${r.nome}
+          style="flex:1;min-width:140px;padding:12px;border-radius:11px;background:var(--accent);border:none;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          ✓ Salvar
         </button>
-        ${_tokens[rede]?`<button onclick="fecharModalRede();desconectarRede('${rede}')" style="padding:13px 16px;border-radius:11px;border:1px solid #f87171;background:transparent;font-size:13px;color:#dc2626;cursor:pointer;">Desconectar</button>`:''}
-        <button onclick="fecharModalRede()"
-          style="padding:13px 18px;border-radius:11px;border:1px solid var(--border2);background:transparent;font-size:14px;color:var(--muted);cursor:pointer;">
-          Cancelar
-        </button>
+        ${connected ? `<button onclick="fecharModalRede();desconectarRede('${rede}')" style="padding:12px 16px;border-radius:11px;border:1px solid #f87171;background:transparent;font-size:13px;color:#dc2626;cursor:pointer;">Desconectar</button>` : ''}
+        <button onclick="fecharModalRede()" style="padding:12px 16px;border-radius:11px;border:1px solid var(--border2);background:transparent;font-size:14px;color:var(--muted);cursor:pointer;">Cancelar</button>
       </div>
       <div id="nc_err_${rede}" style="display:none;margin-top:10px;font-size:12px;color:var(--red);padding:8px 12px;background:#fef2f2;border-radius:8px;"></div>
     </div>`;
 
   document.getElementById('modal-rede-overlay').style.display = 'flex';
   setTimeout(()=>document.getElementById('inp_'+rede+'_user')?.focus(), 150);
+}
+
+// Iniciar OAuth em popup
+function iniciarOAuth(rede) {
+  const oConf = OAUTH_PLATFORMS[rede]; if(!oConf) return;
+  const cid = clienteData?.id || 0;
+  const email = clienteData?.email || '';
+  const platform = oConf.type;
+  const url = BACKEND+'/auth/'+platform+'?client_id='+cid+'&email='+encodeURIComponent(email);
+
+  const popup = window.open(url, 'oauth_popup', 'width=600,height=700,scrollbars=yes');
+
+  // Escutar resposta do popup
+  const handler = (event) => {
+    if (event.data?.type === 'oauth_success' && event.data.platform === platform) {
+      window.removeEventListener('message', handler);
+      fecharModalRede();
+      // Recarregar tokens do backend
+      carregarTokens();
+      showToast('✓ '+rede+' conectado com sucesso!');
+    } else if (event.data?.type === 'oauth_error') {
+      window.removeEventListener('message', handler);
+      const errEl = document.getElementById('nc_err_'+rede);
+      if(errEl){ errEl.textContent='Erro na autorização. Tente novamente.'; errEl.style.display='block'; }
+    }
+  };
+  window.addEventListener('message', handler);
 }
 
 function fecharModalRede() {
@@ -1624,210 +1650,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nc2-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:500;white-space:nowrap;transition:all .15s;flex-shrink:0;}
 .nc2-btn:hover{border-color:var(--accent);color:var(--accent);}
 .nc2-btn.connected{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+
+/* TEMPLATE RETRO */
+.retro-slide-tpl{position:fixed;left:-9999px;top:0;width:1080px;height:1080px;background:#F5E8C8;font-family:'Arial Black','Impact',sans-serif;overflow:hidden;box-sizing:border-box;}
+.retro-slide-tpl *{box-sizing:border-box;}
 </style>
 </head>
 <body>
-
-<div class="login-wrap" id="login-wrap">
-  <div class="login-box">
-    <div class="login-logo"><span class="dot"></span><span>SocialHub</span></div>
-    <h2>Acessar meu painel</h2>
-    <p>Entre com o Google usando o e-mail que você usou ao contratar.</p>
-    <div class="google-btn-wrap">
-      <div id="g_id_onload"
-        data-client_id="1047749706-foafa60tplb1327c76b0s18hagqnm2af.apps.googleusercontent.com"
-        data-callback="handleGoogleLogin"
-        data-auto_prompt="false"></div>
-      <div class="g_id_signin"
-        data-type="standard" data-size="large" data-theme="outline"
-        data-text="signin_with" data-shape="rectangular"
-        data-logo_alignment="left" data-locale="pt-BR" data-width="320"></div>
-    </div>
-    <div class="login-err" id="login-err">E-mail não encontrado. Verifique se usou o mesmo e-mail ao contratar.</div>
-    <div class="login-note">Ainda não é cliente? <a href="socialhub-landing.html" style="color:var(--accent);text-decoration:none;font-weight:500;">Ver planos →</a></div>
-  </div>
-</div>
-
-<div class="app" id="app">
-  <div class="topbar">
-    <div class="topbar-logo"><span class="dot"></span> SocialHub</div>
-    <div class="topbar-right">
-      <span class="plan-pill" id="top-plan">—</span>
-      <span style="font-size:13px;font-weight:500;" id="top-name">—</span>
-      <img class="user-avatar" id="top-avatar" src="" alt="">
-      <button onclick="doLogout()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;">Sair</button>
-    </div>
-  </div>
-
-  <div class="page">
-    <div class="tab-row">
-      <button class="tab on" onclick="switchTab('dash',this)">Início</button>
-      <button class="tab" onclick="switchTab('criar',this)">✦ Criar post</button>
-      <button class="tab" onclick="switchTab('posts',this)">Meus posts</button>
-      <button class="tab" onclick="switchTab('redes',this)">Redes sociais</button>
-      <button class="tab" onclick="switchTab('plano',this)">Meu plano</button>
-    </div>
-
-    <!-- INÍCIO -->
-    <div id="tab-dash">
-      <div class="welcome">
-        <div class="welcome-badge">✦ IA ativa e gerando conteúdo</div>
-        <h2 id="welcome-name">Olá! 👋</h2>
-        <p>Seus posts estão sendo criados com imagens e agendados automaticamente. Aprove, edite ou crie novos!</p>
-      </div>
-      <div class="metrics">
-        <div class="mc"><div class="ml">Posts agendados</div><div class="mv" id="m-ag">—</div><div class="md">próximos 30 dias</div></div>
-        <div class="mc"><div class="ml">Posts publicados</div><div class="mv" id="m-pub">—</div><div class="md">este mês</div></div>
-        <div class="mc"><div class="ml">Redes ativas</div><div class="mv" id="m-redes">0</div><div class="md">de <span id="m-rmax">4</span> disponíveis</div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div class="card-title">Próximos posts</div><button class="pabtn" onclick="switchTab('posts',document.querySelectorAll('.tab')[2])" style="flex:0;padding:6px 14px;">Ver todos →</button></div>
-        <div class="posts-grid" id="dash-posts"><div class="loading-box"><div class="spin"></div> Carregando posts...</div></div>
-      </div>
-    </div>
-
-    <!-- CRIAR POST -->
-    <div id="tab-criar" style="display:none;">
-      <div class="gen-box">
-        <div class="gen-title"><span>✦</span> Criar novo conteúdo com IA</div>
-        <div class="gen-type-row">
-          <div class="gen-type-btn sel" onclick="selTipo(this,'imagem')" data-tipo="imagem">
-            <span class="gico">🖼️</span>Post com imagem
-          </div>
-          <div class="gen-type-btn" onclick="selTipo(this,'carrossel')" data-tipo="carrossel">
-            <span class="gico">🎠</span>Carrossel
-          </div>
-          <div class="gen-type-btn" onclick="selTipo(this,'video')" data-tipo="video">
-            <span class="gico">🎬</span>Roteiro de vídeo
-          </div>
-          <div class="gen-type-btn" onclick="selTipo(this,'stories')" data-tipo="stories">
-            <span class="gico">📱</span>Stories
-          </div>
-        </div>
-        <div class="gen-inputs">
-          <input type="text" id="gen-assunto" placeholder="Assunto do post (ex: promoção de sexta, novo produto, dica do dia...)">
-          <select id="gen-rede">
-            <option value="Instagram">Instagram</option>
-            <option value="Facebook">Facebook</option>
-            <option value="TikTok">TikTok</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Todas as redes">Todas as redes</option>
-          </select>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
-          <div style="font-size:13px;color:var(--muted);white-space:nowrap;">🎯 Nicho do post:</div>
-          <input type="text" id="gen-nicho-custom" placeholder="Deixe em branco para usar seu nicho principal..." style="flex:1;border:none;background:transparent;font-size:13px;color:var(--text);outline:none;font-family:'DM Sans',sans-serif;">
-          <div id="gen-nicho-atual" style="font-size:11px;color:var(--accent);white-space:nowrap;cursor:pointer;" onclick="document.getElementById('gen-nicho-custom').value='';document.getElementById('gen-nicho-custom').focus();">usar meu nicho ↩</div>
-        </div>
-        <button class="btn-gen" id="btn-gen" onclick="gerarConteudo()">
-          <span id="btn-gen-ico">✦</span> <span id="btn-gen-txt">Gerar com IA agora</span>
-        </button>
-        <div class="gen-progress" id="gen-progress">
-          <div class="gen-progress-msg" id="gen-msg">Gerando...</div>
-          <div class="gen-bar-wrap"><div class="gen-bar-fill" id="gen-bar" style="width:0%"></div></div>
-        </div>
-      </div>
-      <div id="gen-resultado"></div>
-    </div>
-
-    <!-- MEUS POSTS -->
-    <div id="tab-posts" style="display:none;">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">Todos os meus posts</div>
-          <select id="filter-status" onchange="renderTodosPosts()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-family:'DM Sans',sans-serif;">
-            <option value="">Todos</option>
-            <option value="scheduled">Agendados</option>
-            <option value="published">Publicados</option>
-          </select>
-        </div>
-        <div class="posts-grid" id="all-posts"><div class="loading-box"><div class="spin"></div> Carregando...</div></div>
-      </div>
-    </div>
-
-    <!-- REDES SOCIAIS -->
-    <div id="tab-redes" style="display:none;">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">Suas redes sociais</div>
-          <span style="font-size:12px;color:var(--muted);">Conecte para publicação automática</span>
-        </div>
-        <div class="nets-grid" id="nets-grid">
-          <div class="net-card" id="netcard-Instagram" data-net="Instagram">
-            <div class="net-icon" style="background:linear-gradient(135deg,#C13584,#F56040);color:white;font-size:20px;">📷</div>
-            <div class="net-name">Instagram</div>
-            <div class="net-st" id="netst-Instagram">Não conectado</div>
-            <div class="net-user" id="netuser-Instagram" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-Instagram" onclick="abrirConexao('Instagram')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-Facebook" data-net="Facebook">
-            <div class="net-icon" style="background:#1877F2;color:white;font-size:20px;font-weight:800;">f</div>
-            <div class="net-name">Facebook</div>
-            <div class="net-st" id="netst-Facebook">Não conectado</div>
-            <div class="net-user" id="netuser-Facebook" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-Facebook" onclick="abrirConexao('Facebook')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-TikTok" data-net="TikTok">
-            <div class="net-icon" style="background:#111;color:white;font-size:20px;">♪</div>
-            <div class="net-name">TikTok</div>
-            <div class="net-st" id="netst-TikTok">Não conectado</div>
-            <div class="net-user" id="netuser-TikTok" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-TikTok" onclick="abrirConexao('TikTok')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-YouTube" data-net="YouTube">
-            <div class="net-icon" style="background:#FF0000;color:white;font-size:20px;">▶</div>
-            <div class="net-name">YouTube</div>
-            <div class="net-st" id="netst-YouTube">Não conectado</div>
-            <div class="net-user" id="netuser-YouTube" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-YouTube" onclick="abrirConexao('YouTube')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-LinkedIn" data-net="LinkedIn">
-            <div class="net-icon" style="background:#0A66C2;color:white;font-size:20px;font-weight:800;">in</div>
-            <div class="net-name">LinkedIn</div>
-            <div class="net-st" id="netst-LinkedIn">Não conectado</div>
-            <div class="net-user" id="netuser-LinkedIn" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-LinkedIn" onclick="abrirConexao('LinkedIn')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-Twitter" data-net="Twitter">
-            <div class="net-icon" style="background:#111;color:white;font-size:20px;font-weight:800;">𝕏</div>
-            <div class="net-name">Twitter / X</div>
-            <div class="net-st" id="netst-Twitter">Não conectado</div>
-            <div class="net-user" id="netuser-Twitter" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-Twitter" onclick="abrirConexao('Twitter')">Configurar</button>
-          </div>
-        </div>
-        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">
-          ✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.
-          Cada rede requer um token de acesso da sua conta de desenvolvedor.
-        </div>
-      </div>
-    </div>
-
-    <!-- MODAL DE CONEXÃO DE REDE -->
-    <div id="modal-rede-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:20px;">
-      <div id="modal-rede" style="background:var(--surface);border-radius:20px;padding:28px 32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
-        <button onclick="fecharModalRede()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;">✕</button>
-        <div id="modal-rede-content"></div>
-      </div>
-    </div>
-
-    <!-- MEU PLANO -->
-    <div id="tab-plano" style="display:none;">
-      <div class="card">
-        <div class="card-head"><div class="card-title">Meu plano</div></div>
-        <div class="plan-row"><div class="plan-key">Plano atual</div><div class="plan-val"><span class="plan-pill" id="pl-plano">—</span></div></div>
-        <div class="plan-row"><div class="plan-key">Status</div><div class="plan-val" id="pl-status">—</div></div>
-        <div class="plan-row"><div class="plan-key">Posts por mês</div><div class="plan-val" id="pl-posts">—</div></div>
-        <div class="plan-row"><div class="plan-key">Vencimento</div><div class="plan-val" id="pl-venc">—</div></div>
-        <div class="plan-row"><div class="plan-key">Nicho</div><div class="plan-val" id="pl-nicho">—</div></div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <a href="socialhub-landing.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:12px 24px;border-radius:12px;background:var(--accent);color:white;font-size:13px;font-weight:600;text-decoration:none;">↑ Fazer upgrade</a>
-        <button onclick="alert('Entre em contato via WhatsApp para suporte.')" style="padding:12px 24px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;">Suporte</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="sh-toast" id="sh-toast"></div>
 </body>
 </html>
