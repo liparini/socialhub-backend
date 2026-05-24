@@ -399,68 +399,110 @@ function gerarPostsDemo() {
   ];
 }
 
-// Gera imagem do post como canvas 1080x1080 (Instagram square)
-function gerarCardCanvas(canvasEl, emoji, caption, network, hashtags, tipo) {
+// Desenha card com foto real de fundo
+function desenharCard(canvasEl, imgEl, emoji, caption, network, hashtags) {
   const W = canvasEl.width = 1080;
   const H = canvasEl.height = 1080;
   const ctx = canvasEl.getContext('2d');
-  const nets = {
-    Instagram: ['#C13584','#F56040','#FFDC80'],
-    Facebook: ['#1877F2','#0a5fc7','#1877F2'],
-    TikTok: ['#010101','#333','#69C9D0'],
-    YouTube: ['#FF0000','#cc0000','#FF6B6B'],
-    LinkedIn: ['#0A66C2','#004182','#0A66C2'],
-    default: ['#7c5cfc','#a78bfa','#534AB7']
-  };
-  const colors = nets[network] || nets.default;
-  // Background gradient
-  const grad = ctx.createLinearGradient(0,0,W,H);
-  grad.addColorStop(0, colors[0]);
-  grad.addColorStop(0.6, colors[1]);
-  grad.addColorStop(1, colors[2]);
+  // Foto de fundo (cover)
+  if (imgEl) {
+    const ratio = Math.max(W/imgEl.naturalWidth, H/imgEl.naturalHeight);
+    const iw = imgEl.naturalWidth * ratio;
+    const ih = imgEl.naturalHeight * ratio;
+    ctx.drawImage(imgEl, (W-iw)/2, (H-ih)/2, iw, ih);
+  }
+  // Gradiente escuro embaixo para legibilidade
+  const grad = ctx.createLinearGradient(0, H*0.4, 0, H);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(0.5, 'rgba(0,0,0,0.65)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.88)');
   ctx.fillStyle = grad;
-  ctx.fillRect(0,0,W,H);
-  // Overlay pattern
-  ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  for(let i=0;i<W;i+=60){ctx.fillRect(i,0,1,H);}
-  for(let j=0;j<H;j+=60){ctx.fillRect(0,j,W,1);}
-  // White card in center
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.beginPath();
-  ctx.roundRect(60,60,W-120,H-120,40);
-  ctx.fill();
-  // Emoji grande
-  ctx.font = '180px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(emoji||'📱', W/2, 340);
-  // Rede social
-  ctx.font = 'bold 48px sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.fillText(network||'Post', W/2, 420);
-  // Legenda (quebra em linhas)
-  ctx.font = '44px sans-serif';
+  ctx.fillRect(0, 0, W, H);
+  // Badge da rede (topo)
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath(); ctx.roundRect(40,40,220,60,30); ctx.fill();
+  ctx.font = 'bold 30px sans-serif';
   ctx.fillStyle = 'white';
-  const words = (caption||'').replace(/#\w+/g,'').trim().split(' ');
-  let line='', y=520, lh=60, maxW=W-160;
+  ctx.textAlign = 'left';
+  ctx.fillText((network||'Post'), 70, 80);
+  // Emoji (centralizado no meio)
+  ctx.font = '110px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(emoji||'', W/2, 480);
+  // Legenda (quebra em linhas — área inferior)
+  ctx.font = 'bold 46px sans-serif';
+  ctx.fillStyle = 'white';
+  ctx.textAlign = 'center';
+  const cleanCaption = (caption||'').replace(/#\w+/g,'').trim();
+  const words = cleanCaption.split(' ');
+  let line='', y=620, lh=62, maxW=W-120;
   for(const word of words) {
     const test = line+word+' ';
     if(ctx.measureText(test).width > maxW && line) {
       ctx.fillText(line.trim(), W/2, y); y+=lh; line=word+' ';
-      if(y>820) break;
+      if(y > 880) { ctx.fillText(line.trim()+'...', W/2, y); break; }
     } else { line=test; }
   }
-  if(line && y<=820) ctx.fillText(line.trim(), W/2, y);
+  if(line && y<=880) ctx.fillText(line.trim(), W/2, y);
   // Hashtags
-  ctx.font = '34px sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.65)';
-  const htags = (hashtags||'').split(' ').slice(0,4).join(' ');
-  ctx.fillText(htags, W/2, 920);
-  // Logo SocialHub
-  ctx.font = 'bold 32px sans-serif';
+  ctx.font = '32px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  const htags = (hashtags||'').split(' ').slice(0,5).join(' ');
+  ctx.fillText(htags, W/2, 960);
+  // Marca SocialHub
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fillText('✦ SocialHub', W/2, 1030);
+}
+
+// Fallback: card com gradiente (sem foto)
+function desenharCardGradiente(canvasEl, emoji, caption, network, hashtags) {
+  const nets = {
+    Instagram:['#C13584','#F56040'], Facebook:['#1877F2','#0a5fc7'],
+    TikTok:['#111','#333'], YouTube:['#FF0000','#cc0000'],
+    LinkedIn:['#0A66C2','#004182'], default:['#7c5cfc','#534AB7']
+  };
+  const [c1,c2] = nets[network]||nets.default;
+  const W = canvasEl.width = 1080;
+  const H = canvasEl.height = 1080;
+  const ctx = canvasEl.getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,c1); grad.addColorStop(1,c2);
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+  desenharCard(canvasEl, null, emoji, caption, network, hashtags);
+}
+
+// Função principal: busca foto real e desenha
+async function gerarCardCanvas(canvasEl, emoji, caption, network, hashtags, tipo) {
+  // Mostrar loading no canvas
+  const W = canvasEl.width = 1080;
+  const H = canvasEl.height = 1080;
+  const ctx = canvasEl.getContext('2d');
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0,0,W,H);
+  ctx.font = '48px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.fillText('✦ SocialHub', W/2, 990);
-  // Retornar data URL
-  return canvasEl.toDataURL('image/png');
+  ctx.textAlign = 'center';
+  ctx.fillText('Carregando foto...', W/2, H/2);
+
+  // Buscar foto real pelo backend
+  const keywords = caption.replace(/[^a-zA-ZÀ-ú0-9 ]/g,' ').trim().split(' ').slice(0,4).join(' ')
+                   + ' ' + (network||'');
+  try {
+    const resp = await fetch(BACKEND+'/api/imagem?q='+encodeURIComponent(keywords));
+    const data = await resp.json();
+    if (data.url) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => desenharCard(canvasEl, img, emoji, caption, network, hashtags);
+      img.onerror = () => desenharCardGradiente(canvasEl, emoji, caption, network, hashtags);
+      img.src = data.url;
+    } else {
+      desenharCardGradiente(canvasEl, emoji, caption, network, hashtags);
+    }
+  } catch(e) {
+    desenharCardGradiente(canvasEl, emoji, caption, network, hashtags);
+  }
 }
 
 function baixarCard(canvasEl, network) {
