@@ -233,6 +233,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .pc-caption-edit:focus{border-color:var(--accent);}
 .pc-tags{font-size:12px;color:var(--accent);margin-top:6px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;outline:none;background:var(--bg);min-height:36px;width:100%;font-family:'DM Sans',sans-serif;}
 
+
+/* NETWORK CARDS v2 */
+.net-card2{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;background:var(--surface);transition:all .2s;}
+.net-card2:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.net-card2.connected{border-color:var(--green);background:var(--green-bg);}
+.nc2-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;font-weight:800;flex-shrink:0;}
+.nc2-info{flex:1;min-width:0;}
+.nc2-nome{font-size:13px;font-weight:600;}
+.nc2-desc{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.net-card2.connected .nc2-desc{color:var(--green);}
+.nc2-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:500;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.nc2-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nc2-btn.connected{background:var(--green-bg);border-color:var(--green);color:var(--green);}
 </style>
 </head>
 <body>
@@ -361,61 +374,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <div class="card-title">Suas redes sociais</div>
           <span style="font-size:12px;color:var(--muted);">Conecte para publicação automática</span>
         </div>
-        <div class="nets-grid" id="nets-grid">
-          <div class="net-card" id="netcard-Instagram" data-net="Instagram">
-            <div class="net-icon" style="background:linear-gradient(135deg,#C13584,#F56040);color:white;font-size:20px;">📷</div>
-            <div class="net-name">Instagram</div>
-            <div class="net-st" id="netst-Instagram">Não conectado</div>
-            <div class="net-user" id="netuser-Instagram" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-Instagram" onclick="abrirConexao('Instagram')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-Facebook" data-net="Facebook">
-            <div class="net-icon" style="background:#1877F2;color:white;font-size:20px;font-weight:800;">f</div>
-            <div class="net-name">Facebook</div>
-            <div class="net-st" id="netst-Facebook">Não conectado</div>
-            <div class="net-user" id="netuser-Facebook" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-Facebook" onclick="abrirConexao('Facebook')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-TikTok" data-net="TikTok">
-            <div class="net-icon" style="background:#111;color:white;font-size:20px;">♪</div>
-            <div class="net-name">TikTok</div>
-            <div class="net-st" id="netst-TikTok">Não conectado</div>
-            <div class="net-user" id="netuser-TikTok" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-TikTok" onclick="abrirConexao('TikTok')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-YouTube" data-net="YouTube">
-            <div class="net-icon" style="background:#FF0000;color:white;font-size:20px;">▶</div>
-            <div class="net-name">YouTube</div>
-            <div class="net-st" id="netst-YouTube">Não conectado</div>
-            <div class="net-user" id="netuser-YouTube" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-YouTube" onclick="abrirConexao('YouTube')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-LinkedIn" data-net="LinkedIn">
-            <div class="net-icon" style="background:#0A66C2;color:white;font-size:20px;font-weight:800;">in</div>
-            <div class="net-name">LinkedIn</div>
-            <div class="net-st" id="netst-LinkedIn">Não conectado</div>
-            <div class="net-user" id="netuser-LinkedIn" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-LinkedIn" onclick="abrirConexao('LinkedIn')">Configurar</button>
-          </div>
-          <div class="net-card" id="netcard-Twitter" data-net="Twitter">
-            <div class="net-icon" style="background:#111;color:white;font-size:20px;font-weight:800;">𝕏</div>
-            <div class="net-name">Twitter / X</div>
-            <div class="net-st" id="netst-Twitter">Não conectado</div>
-            <div class="net-user" id="netuser-Twitter" style="display:none;font-size:11px;color:var(--green);"></div>
-            <button class="btn-conn" id="netbtn-Twitter" onclick="abrirConexao('Twitter')">Configurar</button>
-          </div>
+
+        <div id="nets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px;">
+          <!-- Cards gerados pelo JS -->
         </div>
-        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">
+
+        <div style="padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">
           ✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.
-          Cada rede requer um token de acesso da sua conta de desenvolvedor.
         </div>
       </div>
     </div>
 
-    <!-- MODAL DE CONEXÃO DE REDE -->
-    <div id="modal-rede-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:20px;">
-      <div id="modal-rede" style="background:var(--surface);border-radius:20px;padding:28px 32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">
-        <button onclick="fecharModalRede()" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;">✕</button>
+    <!-- MODAL CONEXÃO DE REDE -->
+    <div id="modal-rede-overlay" onclick="if(event.target===this)fecharModalRede()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:20px;">
+      <div id="modal-rede" style="background:var(--surface);border-radius:20px;padding:0;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
         <div id="modal-rede-content"></div>
       </div>
     </div>
@@ -1158,174 +1130,136 @@ function pcAgendar(slID) {
 function salvarPost(btn) { btn.textContent='✓ Salvo!'; btn.className='pabtn approved'; btn.disabled=true; }
 
 
-// ========= REDES SOCIAIS — CONEXÃO REAL =========
+// ========= REDES SOCIAIS — CONEXÃO SIMPLIFICADA =========
 
-const GUIAS_REDE = {
-  Instagram: {
-    cor: 'linear-gradient(135deg,#C13584,#F56040)', icon: '📷',
-    url: 'https://developers.facebook.com/tools/explorer/',
-    passos: [
-      'Acesse o <a href="https://business.facebook.com/" target="_blank" style="color:var(--accent)">Meta Business Suite</a> com sua conta',
-      'Vá em <strong>Configurações → Aplicativos → Criar App</strong> (tipo: Business)',
-      'Adicione o produto <strong>Instagram Graph API</strong>',
-      'Em <strong>Ferramentas → Explorador de API do Graph</strong>, gere um token com permissões: <code>instagram_content_publish</code>',
-      'Cole o token abaixo. O ID da conta Instagram é o número da sua conta comercial.'
-    ],
-    campos: [{id:'token',label:'Access Token',placeholder:'EAABsbCS...'},{id:'pageid',label:'ID da Conta Instagram',placeholder:'17841400000000000'}]
-  },
-  Facebook: {
-    cor: '#1877F2', icon: 'f',
-    url: 'https://developers.facebook.com/tools/explorer/',
-    passos: [
-      'Acesse <a href="https://developers.facebook.com" target="_blank" style="color:var(--accent)">Meta for Developers</a> e crie um App',
-      'No <strong>Explorador de API do Graph</strong>, selecione seu App',
-      'Gere token com permissões: <code>pages_manage_posts, pages_read_engagement</code>',
-      'Clique em <strong>"Obter token de página"</strong> para a página do Facebook desejada'
-    ],
-    campos: [{id:'token',label:'Page Access Token',placeholder:'EAABsbCS...'},{id:'pageid',label:'ID da Página Facebook',placeholder:'100000000000000'}]
-  },
-  TikTok: {
-    cor: '#111', icon: '♪',
-    url: 'https://developers.tiktok.com/',
-    passos: [
-      'Acesse <a href="https://developers.tiktok.com" target="_blank" style="color:var(--accent)">TikTok for Developers</a>',
-      'Crie um app e solicite acesso à <strong>Content Posting API</strong>',
-      'Após aprovação, gere o Access Token na área de <strong>Sandbox</strong>'
-    ],
-    campos: [{id:'token',label:'Access Token TikTok',placeholder:'act.xxxxxxxx...'},{id:'pageid',label:'Open ID',placeholder:'_000000000000000000'}]
-  },
-  YouTube: {
-    cor: '#FF0000', icon: '▶',
-    url: 'https://console.cloud.google.com/',
-    passos: [
-      'Acesse <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent)">Google Cloud Console</a>',
-      'Crie um projeto e ative a <strong>YouTube Data API v3</strong>',
-      'Em <strong>Credenciais → OAuth 2.0</strong>, crie para "Aplicativo da Web"',
-      'Use o <a href="https://developers.google.com/oauthplayground" target="_blank" style="color:var(--accent)">OAuth 2.0 Playground</a> para obter o token com escopo <code>youtube.upload</code>'
-    ],
-    campos: [{id:'token',label:'OAuth Access Token',placeholder:'ya29.xxxxxxxx...'},{id:'pageid',label:'Channel ID',placeholder:'UCxxxxxxxxxxxxxxxx'}]
-  },
-  LinkedIn: {
-    cor: '#0A66C2', icon: 'in',
-    url: 'https://www.linkedin.com/developers/',
-    passos: [
-      'Acesse <a href="https://www.linkedin.com/developers/apps" target="_blank" style="color:var(--accent)">LinkedIn Developers</a> e crie um App',
-      'Solicite acesso ao produto <strong>Marketing Developer Platform</strong>',
-      'Use o <a href="https://www.linkedin.com/developers/tools/oauth/token-generator" target="_blank" style="color:var(--accent)">Token Generator</a> do LinkedIn com escopos: <code>w_member_social</code>'
-    ],
-    campos: [{id:'token',label:'Access Token LinkedIn',placeholder:'AQVxxxx...'},{id:'pageid',label:'Person URN',placeholder:'urn:li:person:xxxxxxx'}]
-  },
-  Twitter: {
-    cor: '#111', icon: '𝕏',
-    url: 'https://developer.twitter.com/',
-    passos: [
-      'Acesse <a href="https://developer.twitter.com/en/portal/dashboard" target="_blank" style="color:var(--accent)">Twitter Developer Portal</a>',
-      'Crie um projeto e App com acesso <strong>Read and Write</strong>',
-      'Em <strong>Keys and Tokens</strong>, gere o Bearer Token e Access Token'
-    ],
-    campos: [{id:'token',label:'Bearer Token',placeholder:'AAAAAAAAAxxxxxxxx...'},{id:'pageid',label:'Access Token',placeholder:'0000000000-xxxxxxxxx'}]
-  }
-};
+const REDES_CONFIG = [
+  { id:'Instagram',  nome:'Instagram',  cor:'linear-gradient(135deg,#C13584,#F56040)', icon:'📷', descricao:'Conta profissional ou criadora' },
+  { id:'Facebook',   nome:'Facebook',   cor:'#1877F2', icon:'f',  descricao:'Página do Facebook' },
+  { id:'TikTok',     nome:'TikTok',     cor:'#111',    icon:'♪',  descricao:'Conta pessoal ou empresarial' },
+  { id:'YouTube',    nome:'YouTube',    cor:'#FF0000', icon:'▶',  descricao:'Canal do YouTube' },
+  { id:'LinkedIn',   nome:'LinkedIn',   cor:'#0A66C2', icon:'in', descricao:'Perfil ou empresa' },
+  { id:'Twitter',    nome:'Twitter / X',cor:'#111',    icon:'𝕏',  descricao:'Conta pessoal ou profissional' },
+];
+
+// Renderizar cards das redes
+function renderNetCards() {
+  const grid = document.getElementById('nets-grid');
+  if (!grid) return;
+  grid.innerHTML = REDES_CONFIG.map(r => `
+    <div class="net-card2 ${_tokens[r.id]?'connected':''}" id="nc2_${r.id}">
+      <div class="nc2-icon" style="background:${r.cor};">${r.icon}</div>
+      <div class="nc2-info">
+        <div class="nc2-nome">${r.nome}</div>
+        <div class="nc2-desc" id="ncdesc_${r.id}">${_tokens[r.id] ? '✓ @'+_tokens[r.id].username : r.descricao}</div>
+      </div>
+      <button class="nc2-btn ${_tokens[r.id]?'connected':''}" onclick="abrirConexao('${r.id}')">
+        ${_tokens[r.id] ? 'Reconfigurar' : 'Conectar'}
+      </button>
+    </div>`).join('');
+}
+
+const _tokens = {};
 
 function abrirConexao(rede) {
-  const g = GUIAS_REDE[rede]; if(!g) return;
-  const overlay = document.getElementById('modal-rede-overlay');
+  const r = REDES_CONFIG.find(x=>x.id===rede); if(!r) return;
   const content = document.getElementById('modal-rede-content');
-  const passosHTML = g.passos.map((p,i)=>
-    `<div style="display:flex;gap:10px;margin-bottom:10px;">
-      <div style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i+1}</div>
-      <div style="font-size:13px;color:var(--text);line-height:1.6;">${p}</div>
-    </div>`).join('');
-  const camposHTML = g.campos.map(f=>
-    `<div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">${f.label}</div>
-      <input type="password" id="inp_${rede}_${f.id}" placeholder="${f.placeholder}"
-        style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:9px;background:var(--bg);font-family:monospace;font-size:12px;color:var(--text);">
-    </div>`).join('');
+
   content.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-      <div style="width:42px;height:42px;border-radius:12px;background:${g.cor};color:white;font-size:20px;display:flex;align-items:center;justify-content:center;font-weight:800;">${g.icon}</div>
-      <div>
-        <div style="font-size:17px;font-weight:800;font-family:'Syne',sans-serif;">Conectar ${rede}</div>
-        <div style="font-size:12px;color:var(--muted);">Configure o acesso para publicação automática</div>
+    <div style="padding:24px 28px;">
+      <button onclick="fecharModalRede()" style="position:absolute;top:16px;right:18px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;z-index:1;">✕</button>
+
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:24px;">
+        <div style="width:64px;height:64px;border-radius:16px;background:${r.cor};color:white;font-size:30px;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:12px;">${r.icon}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;">Conectar ${r.nome}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">${r.descricao}</div>
       </div>
-    </div>
-    <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:16px;">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Como obter as credenciais</div>
-      ${passosHTML}
-      <a href="${g.url}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);font-weight:600;text-decoration:none;margin-top:6px;">→ Abrir painel de desenvolvedores ↗</a>
-    </div>
-    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:14px;">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Cole suas credenciais</div>
-      <div style="margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Nome de usuário / Página</div>
-        <input type="text" id="inp_${rede}_username" placeholder="@seuperfil ou Nome da Página"
-          style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:9px;background:var(--surface);font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;">
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Usuário / Nome da Conta</label>
+          <div style="position:relative;">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">@</span>
+            <input type="text" id="inp_${rede}_user" placeholder="seuperfil"
+              style="width:100%;padding:11px 12px 11px 28px;border:1.5px solid var(--border2);border-radius:10px;background:var(--bg);font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;box-sizing:border-box;"
+              onkeydown="if(event.key==='Enter')confirmarConexao('${rede}')">
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+            ${r.id==='Instagram'||r.id==='Facebook' ?
+              '💡 <strong>Dica:</strong> Para publicação automática real, o Instagram e Facebook exigem aprovação de app pela Meta. O usuário conectado aqui será usado para identificação e para quando você publicar manualmente.' :
+              '💡 Conecte sua conta para identificação. A publicação automática fica ativa após configurar as permissões de API.'}
+          </div>
+        </div>
       </div>
-      ${camposHTML}
-    </div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="salvarToken('${rede}')" id="btnSalvarToken_${rede}"
-        style="flex:1;padding:12px;border-radius:10px;background:var(--accent);border:none;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">✓ Salvar conexão</button>
-      <button onclick="fecharModalRede()"
-        style="padding:12px 18px;border-radius:10px;border:1px solid var(--border2);background:transparent;font-size:13px;color:var(--muted);cursor:pointer;">Cancelar</button>
-    </div>
-    <div id="modal-rede-err" style="display:none;margin-top:10px;font-size:12px;color:var(--red);padding:8px 12px;background:#fef2f2;border-radius:8px;"></div>`;
-  overlay.style.display = 'flex';
-  setTimeout(()=>document.getElementById('inp_'+rede+'_username')?.focus(),100);
+
+      <div style="display:flex;gap:8px;">
+        <button onclick="confirmarConexao('${rede}')" id="btnSalvar_${rede}"
+          style="flex:1;padding:13px;border-radius:11px;background:${r.cor};border:none;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          ✓ Conectar ${r.nome}
+        </button>
+        <button onclick="fecharModalRede()"
+          style="padding:13px 18px;border-radius:11px;border:1px solid var(--border2);background:transparent;font-size:14px;color:var(--muted);cursor:pointer;">
+          Cancelar
+        </button>
+      </div>
+      <div id="nc_err_${rede}" style="display:none;margin-top:10px;font-size:12px;color:var(--red);padding:8px 12px;background:#fef2f2;border-radius:8px;"></div>
+    </div>`;
+
+  document.getElementById('modal-rede-overlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('inp_'+rede+'_user')?.focus(), 150);
 }
 
 function fecharModalRede() {
   document.getElementById('modal-rede-overlay').style.display = 'none';
 }
 
-async function salvarToken(rede) {
-  const token    = document.getElementById('inp_'+rede+'_token')?.value.trim();
-  const pageid   = document.getElementById('inp_'+rede+'_pageid')?.value.trim();
-  const username = document.getElementById('inp_'+rede+'_username')?.value.trim();
-  const errEl    = document.getElementById('modal-rede-err');
-  if (!token)    { errEl.textContent='Cole o Access Token antes de salvar.'; errEl.style.display='block'; return; }
-  if (!username) { errEl.textContent='Informe o nome de usuário ou página.'; errEl.style.display='block'; return; }
-  errEl.style.display='none';
-  const btn = document.getElementById('btnSalvarToken_'+rede);
+async function confirmarConexao(rede) {
+  const userEl = document.getElementById('inp_'+rede+'_user');
+  const errEl  = document.getElementById('nc_err_'+rede);
+  const username = userEl?.value.trim().replace('@','');
+  if (!username) {
+    errEl.textContent = 'Digite o nome de usuário da conta.';
+    errEl.style.display = 'block';
+    userEl?.focus();
+    return;
+  }
+  errEl.style.display = 'none';
+  const btn = document.getElementById('btnSalvar_'+rede);
   if(btn){ btn.textContent='Salvando...'; btn.disabled=true; }
+
   try {
     if (clienteData?.id && clienteData.id !== 0) {
       await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/tokens', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ network:rede, access_token:token, page_id:pageid, username })
+        body: JSON.stringify({ network:rede, access_token:'pending', page_id:'', username })
       });
     }
-    atualizarCardRede(rede, username);
+    _tokens[rede] = { username };
+    renderNetCards();
+    // Atualizar contador
+    const n = Object.keys(_tokens).length;
+    if(document.getElementById('m-redes')) document.getElementById('m-redes').textContent = n;
     fecharModalRede();
   } catch(e) {
-    errEl.textContent='Erro ao salvar. Tente novamente.'; errEl.style.display='block';
-    if(btn){ btn.textContent='✓ Salvar conexão'; btn.disabled=false; }
+    errEl.textContent = 'Erro ao salvar. Tente novamente.';
+    errEl.style.display = 'block';
+    if(btn){ btn.textContent='✓ Conectar '+rede; btn.disabled=false; }
   }
 }
 
-function atualizarCardRede(rede, username) {
-  const card  = document.getElementById('netcard-'+rede);
-  const stEl  = document.getElementById('netst-'+rede);
-  const userEl= document.getElementById('netuser-'+rede);
-  const btnEl = document.getElementById('netbtn-'+rede);
-  if(card)  { card.classList.remove('pending'); card.classList.add('connected'); }
-  if(stEl)  { stEl.textContent='✓ Conectado'; stEl.style.color='var(--green)'; }
-  if(userEl){ userEl.textContent='@'+username; userEl.style.display='block'; }
-  if(btnEl) { btnEl.textContent='Reconfigurar'; btnEl.style.fontSize='11px'; }
-}
-
 async function carregarTokens() {
-  if (!clienteData?.id || clienteData.id === 0) return;
+  if (!clienteData?.id || clienteData.id === 0) { renderNetCards(); return; }
   try {
     const tokens = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/tokens').then(r=>r.json());
-    let n = 0;
-    (tokens||[]).forEach(t => { atualizarCardRede(t.network, t.username||''); n++; });
-    if(document.getElementById('m-redes')) document.getElementById('m-redes').textContent = n;
+    (tokens||[]).forEach(t => { _tokens[t.network] = { username: t.username||'' }; });
+    if(document.getElementById('m-redes')) document.getElementById('m-redes').textContent = Object.keys(_tokens).length;
   } catch(e) {}
+  renderNetCards();
 }
 
-function conectarRede() {} // legacy stub — uso: abrirConexao(nome)
+function conectarRede() {} // stub legado
 
 // ========= TABS =========
 function switchTab(id, el) {
@@ -1562,6 +1496,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .pc-caption-edit:focus{border-color:var(--accent);}
 .pc-tags{font-size:12px;color:var(--accent);margin-top:6px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;outline:none;background:var(--bg);min-height:36px;width:100%;font-family:'DM Sans',sans-serif;}
 
+
+/* NETWORK CARDS v2 */
+.net-card2{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;background:var(--surface);transition:all .2s;}
+.net-card2:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.net-card2.connected{border-color:var(--green);background:var(--green-bg);}
+.nc2-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;font-weight:800;flex-shrink:0;}
+.nc2-info{flex:1;min-width:0;}
+.nc2-nome{font-size:13px;font-weight:600;}
+.nc2-desc{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.net-card2.connected .nc2-desc{color:var(--green);}
+.nc2-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:500;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.nc2-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nc2-btn.connected{background:var(--green-bg);border-color:var(--green);color:var(--green);}
 </style>
 </head>
 <body>
