@@ -474,24 +474,20 @@ async function gerarConteudo() {
   let mi=0;
   const iv = setInterval(()=>{ msg.textContent=msgs[Math.min(mi,msgs.length-1)]; bar.style.width=Math.min((mi+1)/msgs.length*90,90)+'%'; mi++; },700);
 
+  try {
+    const resp = await fetch(BACKEND+'/api/gerar-conteudo', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tipo: tipoSelecionado, assunto, rede, nicho })
+    });
+    const data = await resp.json();
+    if (!data.sucesso) throw new Error(data.erro||'Erro');
+    const parsed = data.conteudo;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    clearInterval(iv);
+    bar.style.width='100%';
+    msg.textContent='Conteúdo gerado! ✓';
+    setTimeout(()=>{prog.style.display='none';},1000);
 
     const data = await resp.json();
     const raw = data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
@@ -501,10 +497,6 @@ async function gerarConteudo() {
     bar.style.width='100%';
     msg.textContent='Conteúdo gerado! ✓';
     setTimeout(()=>{prog.style.display='none';},1000);
-
-    const agora = new Date();
-    agora.setDate(agora.getDate()+1);
-    agora.setHours(9,0,0,0);
 
     if (tipoSelecionado==='video') {
       resultado.innerHTML = `<div class="post-visual">
