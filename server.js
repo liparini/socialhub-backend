@@ -429,23 +429,21 @@ app.get('/api/pagamento/:order', async (req, res) => {
 app.get('/api/imagem', async (req, res) => {
   try {
     const q = req.query.q || 'business professional';
+    const count = Math.min(parseInt(req.query.count)||1, 10);
     const resp = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=5&orientation=square`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=${count+3}&orientation=square`,
       { headers: { Authorization: process.env.PEXELS_API_KEY } }
     );
     const data = await resp.json();
-    if (!data.photos?.length) {
-      return res.json({ url: null });
-    }
-    const photo = data.photos[Math.floor(Math.random() * data.photos.length)];
-    res.json({
-      url: photo.src.large2x || photo.src.large || photo.src.original,
-      photographer: photo.photographer,
-      alt: photo.alt
-    });
+    if (!data.photos?.length) return res.json({ url: null, urls: [] });
+
+    // Embaralhar para variar
+    const shuffled = data.photos.sort(() => Math.random()-0.5);
+    const urls = shuffled.slice(0, count).map(p => p.src.large2x || p.src.large || p.src.original);
+    res.json({ url: urls[0], urls });
   } catch (err) {
     console.error('Erro Pexels:', err);
-    res.json({ url: null });
+    res.json({ url: null, urls: [] });
   }
 });
 
