@@ -618,18 +618,26 @@ async function gerarConteudo() {
           <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this,'${rede}')">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
         </div>
       </div>`;
-    } else if (tipoSelecionado==='carrossel') {
-      const slides = (parsed.slides||[]).map((s,i)=>`<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;font-size:12px;"><strong>Slide ${i+1}:</strong> ${s}</div>`).join('');
+    } else if (tipoSelecionado==='carrossel' || tipoSelecionado==='stories') {
+      const slides = (parsed.slides||[]).map((s,i)=>`<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:4px;"><strong>${tipoSelecionado==='stories'?'Tela':'Slide'} ${i+1}:</strong> ${s}</div>`).join('');
+      const cidC = 'cvcarr'+Date.now();
+      const safeCarrLeg = (parsed.legenda||'').replace(/['"]/g,' ').slice(0,120);
+      const safeCarrHash = (parsed.hashtags||'').replace(/['"]/g,' ').slice(0,80);
       resultado.innerHTML = `<div class="post-visual">
-        <img class="post-img" src="${imgUrl(parsed.img_keywords||nicho)}" loading="lazy">
+        <canvas class="post-canvas" id="${cidC}" width="1080" height="1080" data-net="${rede}" data-caption="${safeCarrLeg}" data-hash="${safeCarrHash}" data-emoji="🎠" onclick="baixarCard(this,this.dataset.net)"></canvas>
         <div class="post-body">
-          <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede} · Carrossel</span><span class="post-status-badge st-sched">Novo</span></div>
+          <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede} · ${tipoSelecionado==='stories'?'Stories':'Carrossel'}</span><span class="post-status-badge st-sched">Novo</span></div>
           <div class="post-caption">${parsed.legenda||''}</div>
-          <div style="display:flex;flex-direction:column;gap:4px;margin:8px 0;">${slides}</div>
+          <div style="margin:8px 0;">${slides}</div>
           <div class="post-tags">${parsed.hashtags||''}</div>
-          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this,'${rede}')">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this)">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+        </div>
+        <div class="post-dl-bar" data-cid="${cidC}" data-net="${rede}">
+          <button class="btn-dl" onclick="baixarCard(document.getElementById('${cidC}'),document.getElementById('${cidC}').dataset.net)">⬇ Baixar capa</button>
+          <button class="btn-post-ig" onclick="abrirPublicarCard('${cidC}',document.getElementById('${cidC}').dataset.net)">→ Publicar no ${rede}</button>
         </div>
       </div>`;
+      setTimeout(()=>{const cv=document.getElementById(cidC);if(cv)gerarCardCanvas(cv,cv.dataset.emoji,cv.dataset.caption,cv.dataset.net,cv.dataset.hash,'carrossel');},50);
     } else {
       const cid2 = 'cvgen'+Date.now();
       const safeL = (parsed.legenda||'').replace(/['"]/g,' ').slice(0,120);
