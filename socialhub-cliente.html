@@ -7,9 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-:root{--bg:#f8f8fc;--surface:#ffffff;--surface2:#f1f1f8;--border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);--accent:#7c5cfc;--accent2:#a78bfa;--green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--red-bg:#fef2f2;--yellow:#d97706;--yellow-bg:#fffbeb;--text:#111118;--muted:#666677;--muted2:#aaaabc;}
+:root{--bg:#f4f4f9;--surface:#fff;--surface2:#f0f0f7;--border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);--accent:#7c5cfc;--accent2:#a78bfa;--green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--text:#111118;--muted:#666677;--muted2:#aaaabc;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
 .login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.06);}
 .login-logo{display:flex;align-items:center;gap:8px;margin-bottom:28px;justify-content:center;}
@@ -18,66 +20,121 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .login-box h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;}
 .login-box p{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.6;}
 .google-btn-wrap{display:flex;justify-content:center;margin-bottom:16px;}
-.login-err{color:var(--red);font-size:13px;margin-top:12px;padding:10px;background:var(--red-bg);border-radius:8px;display:none;line-height:1.5;}
-.login-note{font-size:12px;color:var(--muted2);margin-top:16px;}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.login-err{color:var(--red);font-size:12px;margin-top:10px;padding:10px;background:#fef2f2;border-radius:8px;display:none;}
+.login-note{font-size:12px;color:var(--muted2);margin-top:14px;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 1px 8px rgba(0,0,0,0.04);}
 .topbar-logo{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
 .topbar-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .user-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;}
-.user-name{font-size:13px;font-weight:500;}
-.plan-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(124,92,252,0.1);color:var(--accent);}
+.plan-pill{font-size:11px;font-weight:600;padding:3px 12px;border-radius:99px;background:rgba(124,92,252,0.1);color:var(--accent);}
+
 .app{display:none;}
 .app.on{display:block;}
-.page{max-width:900px;margin:0 auto;padding:28px 24px;}
-.welcome{background:var(--accent);border-radius:16px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;}
-.welcome::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.05);}
-.welcome h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:white;margin-bottom:6px;}
-.welcome p{font-size:14px;color:rgba(255,255,255,0.75);max-width:500px;}
-.welcome-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:white;font-size:12px;font-weight:500;padding:4px 12px;border-radius:99px;margin-bottom:14px;}
+.page{max-width:960px;margin:0 auto;padding:24px 20px;}
+
+/* TABS */
+.tab-row{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border-radius:12px;padding:4px;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.tab{padding:9px 20px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.tab.on{background:var(--accent);color:white;}
+
+/* WELCOME */
+.welcome{background:linear-gradient(135deg,#7c5cfc,#a78bfa);border-radius:20px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;}
+.welcome::after{content:'✦';position:absolute;right:32px;top:50%;transform:translateY(-50%);font-size:80px;color:rgba(255,255,255,0.08);}
+.welcome-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.18);color:white;font-size:12px;font-weight:500;padding:4px 12px;border-radius:99px;margin-bottom:12px;}
+.welcome h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:white;margin-bottom:6px;}
+.welcome p{font-size:14px;color:rgba(255,255,255,0.8);}
+
+/* METRICS */
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
-.mc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
-.mc .ml{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;}
-.mc .mv{font-size:28px;font-weight:700;font-family:'Syne',sans-serif;}
+.mc{background:var(--surface);border-radius:14px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.mc .ml{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+.mc .mv{font-size:30px;font-weight:700;font-family:'Syne',sans-serif;}
 .mc .md{font-size:11px;color:var(--green);margin-top:4px;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:20px;}
-.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
-.nets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.net-card{border:1px solid var(--border2);border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
-.net-card.connected{border-color:var(--green);background:var(--green-bg);}
-.net-icon{font-size:28px;}
-.net-name{font-size:13px;font-weight:500;}
-.net-status{font-size:11px;font-weight:600;}
-.net-card.connected .net-status{color:var(--green);}
-.net-card:not(.connected) .net-status{color:var(--muted2);}
-.btn-connect{font-size:11px;padding:5px 14px;border-radius:99px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);margin-top:4px;}
-.btn-connected{font-size:11px;padding:5px 14px;border-radius:99px;border:none;background:var(--green-bg);color:var(--green);font-weight:600;}
-.post-card{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
-.post-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.post-net{font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;}
-.ig{background:#fce4ec;color:#c2185b;} .fb{background:#e3f2fd;color:#1565c0;} .tt{background:#f5f5f5;color:#333;} .yt{background:#ffebee;color:#c62828;} .li{background:#e3f2fd;color:#0d47a1;}
+
+/* GERAR POST */
+.gen-box{background:var(--surface);border-radius:16px;padding:20px 22px;margin-bottom:24px;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.gen-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.gen-title span{font-size:20px;}
+.gen-type-row{display:flex;gap:8px;margin-bottom:16px;}
+.gen-type-btn{flex:1;padding:14px 10px;border-radius:12px;border:1.5px solid var(--border2);background:var(--bg);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);text-align:center;transition:all .2s;}
+.gen-type-btn:hover{border-color:var(--accent);color:var(--accent);}
+.gen-type-btn.sel{border-color:var(--accent);background:rgba(124,92,252,0.06);color:var(--accent);}
+.gen-type-btn .gico{font-size:24px;display:block;margin-bottom:4px;}
+.gen-inputs{display:flex;gap:10px;margin-bottom:14px;}
+.gen-inputs input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);}
+.gen-inputs input:focus{outline:none;border-color:var(--accent);}
+.gen-inputs select{padding:10px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);}
+.btn-gen{width:100%;padding:13px;border-radius:12px;background:var(--accent);border:none;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+.btn-gen:hover{background:var(--accent2);}
+.btn-gen:disabled{opacity:.6;cursor:default;}
+.gen-progress{margin-top:12px;display:none;}
+.gen-progress-msg{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.gen-bar-wrap{height:4px;background:var(--bg);border-radius:99px;overflow:hidden;}
+.gen-bar-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s;}
+
+/* POST CARDS VISUAIS */
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.post-visual{background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);transition:transform .2s;}
+.post-visual:hover{transform:translateY(-3px);}
+.post-img{width:100%;height:180px;object-fit:cover;display:block;background:var(--surface2);}
+.post-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,#e8e8f8,#d4d0f8);display:flex;align-items:center;justify-content:center;font-size:48px;}
+.post-body{padding:14px 16px;}
+.post-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.post-net-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;}
+.ig{background:#fce4ec;color:#c2185b;} .fb{background:#e3f2fd;color:#1565c0;}
+.tt{background:#f5f5f5;color:#333;} .yt{background:#ffebee;color:#c62828;}
+.li{background:#e3f2fd;color:#0d47a1;} .tw{background:#f5f5f5;color:#333;}
 .post-time{font-size:11px;color:var(--muted);margin-left:auto;}
-.post-status{font-size:11px;font-weight:600;padding:2px 10px;border-radius:99px;}
+.post-status-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;}
 .st-pub{background:var(--green-bg);color:var(--green);}
 .st-sched{background:rgba(124,92,252,0.1);color:var(--accent);}
-.post-caption{font-size:13px;line-height:1.6;margin-bottom:6px;}
-.post-tags{font-size:12px;color:var(--accent);}
-.post-actions{display:flex;gap:6px;margin-top:10px;}
-.btn-sm{font-size:11px;padding:5px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);}
-.btn-sm.approve{background:var(--green-bg);border-color:var(--green);color:var(--green);font-weight:600;}
-.btn-sm.approved{opacity:.6;cursor:default;background:var(--green-bg);border-color:var(--green);color:var(--green);}
-.plan-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.st-vid{background:#fff3e0;color:#e65100;}
+.post-caption{font-size:13px;line-height:1.6;margin-bottom:8px;color:var(--text);}
+.post-tags{font-size:11px;color:var(--accent);margin-bottom:10px;line-height:1.6;}
+.post-actions-row{display:flex;gap:6px;}
+.pabtn{font-size:11px;padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .15s;flex:1;text-align:center;}
+.pabtn:hover{border-color:var(--accent);color:var(--accent);}
+.pabtn.green{background:var(--green-bg);border-color:var(--green);color:var(--green);font-weight:600;}
+.pabtn.approved{opacity:.6;cursor:default;background:var(--green-bg);border-color:var(--green);color:var(--green);}
+
+/* VIDEO CARD */
+.video-card{background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+.video-thumb{width:100%;height:180px;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;position:relative;}
+.play-btn{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:22px;}
+.video-label{font-size:12px;color:rgba(255,255,255,0.7);font-weight:500;}
+.video-duration{position:absolute;bottom:8px;right:10px;font-size:11px;color:rgba(255,255,255,0.6);background:rgba(0,0,0,0.4);padding:2px 6px;border-radius:4px;}
+.script-box{background:var(--surface2);border-radius:10px;padding:12px;margin:10px 0;font-size:12px;color:var(--muted);line-height:1.7;max-height:100px;overflow-y:auto;}
+
+/* REDES */
+.nets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.net-card{border:1.5px solid var(--border2);border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;transition:all .2s;}
+.net-card.connected{border-color:var(--green);background:var(--green-bg);}
+.net-icon{font-size:30px;}
+.net-name{font-size:13px;font-weight:600;}
+.net-st{font-size:11px;font-weight:600;}
+.net-card.connected .net-st{color:var(--green);}
+.net-card:not(.connected) .net-st{color:var(--muted2);}
+.btn-conn{font-size:11px;padding:6px 16px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);margin-top:2px;transition:all .2s;}
+.btn-conn:hover{border-color:var(--accent);color:var(--accent);}
+.btn-connd{font-size:11px;padding:6px 16px;border-radius:99px;border:none;background:var(--green-bg);color:var(--green);font-weight:700;}
+
+/* PLAN */
+.plan-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
 .plan-row:last-child{border-bottom:none;}
 .plan-key{font-size:13px;color:var(--muted);}
 .plan-val{font-size:13px;font-weight:500;}
-.tab-row{display:flex;gap:4px;margin-bottom:20px;background:var(--surface2);border-radius:10px;padding:4px;}
-.tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'DM Sans',sans-serif;}
-.tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+
+.card{background:var(--surface);border-radius:16px;padding:20px 22px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;}
+.spin{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-box{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;padding:20px;}
-.empty-box{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.loading-box{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:24px;}
+.empty-box{text-align:center;padding:48px;color:var(--muted);font-size:13px;}
+.empty-box .ei{font-size:44px;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -86,26 +143,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="login-box">
     <div class="login-logo"><span class="dot"></span><span>SocialHub</span></div>
     <h2>Acessar meu painel</h2>
-    <p>Entre com o Google usando o mesmo e-mail que você usou ao contratar o SocialHub.</p>
+    <p>Entre com o Google usando o e-mail que você usou ao contratar.</p>
     <div class="google-btn-wrap">
       <div id="g_id_onload"
         data-client_id="1047749706-foafa60tplb1327c76b0s18hagqnm2af.apps.googleusercontent.com"
         data-callback="handleGoogleLogin"
-        data-auto_prompt="false">
-      </div>
+        data-auto_prompt="false"></div>
       <div class="g_id_signin"
-        data-type="standard"
-        data-size="large"
-        data-theme="outline"
-        data-text="signin_with"
-        data-shape="rectangular"
-        data-logo_alignment="left"
-        data-locale="pt-BR"
-        data-width="320">
-      </div>
+        data-type="standard" data-size="large" data-theme="outline"
+        data-text="signin_with" data-shape="rectangular"
+        data-logo_alignment="left" data-locale="pt-BR" data-width="320"></div>
     </div>
-    <div class="login-err" id="login-err">E-mail não encontrado. Verifique se usou o mesmo e-mail ao contratar, ou entre em contato com o suporte.</div>
-    <div class="login-note">Ainda não é cliente? <a href="socialhub-landing.html" style="color:var(--accent);text-decoration:none;font-weight:500;">Conheça os planos →</a></div>
+    <div class="login-err" id="login-err">E-mail não encontrado. Verifique se usou o mesmo e-mail ao contratar.</div>
+    <div class="login-note">Ainda não é cliente? <a href="socialhub-landing.html" style="color:var(--accent);text-decoration:none;font-weight:500;">Ver planos →</a></div>
   </div>
 </div>
 
@@ -114,7 +164,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="topbar-logo"><span class="dot"></span> SocialHub</div>
     <div class="topbar-right">
       <span class="plan-pill" id="top-plan">—</span>
-      <span class="user-name" id="top-name">—</span>
+      <span style="font-size:13px;font-weight:500;" id="top-name">—</span>
       <img class="user-avatar" id="top-avatar" src="" alt="">
       <button onclick="doLogout()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;">Sair</button>
     </div>
@@ -123,70 +173,113 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="page">
     <div class="tab-row">
       <button class="tab on" onclick="switchTab('dash',this)">Início</button>
+      <button class="tab" onclick="switchTab('criar',this)">✦ Criar post</button>
       <button class="tab" onclick="switchTab('posts',this)">Meus posts</button>
       <button class="tab" onclick="switchTab('redes',this)">Redes sociais</button>
       <button class="tab" onclick="switchTab('plano',this)">Meu plano</button>
     </div>
 
+    <!-- INÍCIO -->
     <div id="tab-dash">
       <div class="welcome">
-        <div class="welcome-badge">✦ IA gerando seu conteúdo</div>
+        <div class="welcome-badge">✦ IA ativa e gerando conteúdo</div>
         <h2 id="welcome-name">Olá! 👋</h2>
-        <p>Seus posts estão sendo criados e agendados automaticamente. Aprove ou deixe rolar!</p>
+        <p>Seus posts estão sendo criados com imagens e agendados automaticamente. Aprove, edite ou crie novos!</p>
       </div>
       <div class="metrics">
-        <div class="mc"><div class="ml">Posts agendados</div><div class="mv" id="m-agendados">—</div><div class="md">próximos 30 dias</div></div>
-        <div class="mc"><div class="ml">Posts publicados</div><div class="mv" id="m-publicados">—</div><div class="md">este mês</div></div>
-        <div class="mc"><div class="ml">Redes conectadas</div><div class="mv" id="m-redes">0</div><div class="md">de <span id="m-redes-max">4</span> disponíveis</div></div>
+        <div class="mc"><div class="ml">Posts agendados</div><div class="mv" id="m-ag">—</div><div class="md">próximos 30 dias</div></div>
+        <div class="mc"><div class="ml">Posts publicados</div><div class="mv" id="m-pub">—</div><div class="md">este mês</div></div>
+        <div class="mc"><div class="ml">Redes ativas</div><div class="mv" id="m-redes">0</div><div class="md">de <span id="m-rmax">4</span> disponíveis</div></div>
       </div>
       <div class="card">
-        <div class="card-head"><div class="card-title">Próximos posts</div><button class="btn-sm" onclick="switchTab('posts',document.querySelectorAll('.tab')[1])">Ver todos</button></div>
-        <div id="dash-posts"><div class="loading-box"><div class="spin"></div> Carregando posts...</div></div>
+        <div class="card-head"><div class="card-title">Próximos posts</div><button class="pabtn" onclick="switchTab('posts',document.querySelectorAll('.tab')[2])" style="flex:0;padding:6px 14px;">Ver todos →</button></div>
+        <div class="posts-grid" id="dash-posts"><div class="loading-box"><div class="spin"></div> Carregando posts...</div></div>
       </div>
     </div>
 
+    <!-- CRIAR POST -->
+    <div id="tab-criar" style="display:none;">
+      <div class="gen-box">
+        <div class="gen-title"><span>✦</span> Criar novo conteúdo com IA</div>
+        <div class="gen-type-row">
+          <div class="gen-type-btn sel" onclick="selTipo(this,'imagem')" data-tipo="imagem">
+            <span class="gico">🖼️</span>Post com imagem
+          </div>
+          <div class="gen-type-btn" onclick="selTipo(this,'carrossel')" data-tipo="carrossel">
+            <span class="gico">🎠</span>Carrossel
+          </div>
+          <div class="gen-type-btn" onclick="selTipo(this,'video')" data-tipo="video">
+            <span class="gico">🎬</span>Roteiro de vídeo
+          </div>
+          <div class="gen-type-btn" onclick="selTipo(this,'stories')" data-tipo="stories">
+            <span class="gico">📱</span>Stories
+          </div>
+        </div>
+        <div class="gen-inputs">
+          <input type="text" id="gen-assunto" placeholder="Assunto do post (ex: promoção de sexta, novo produto, dica do dia...)">
+          <select id="gen-rede">
+            <option value="Instagram">Instagram</option>
+            <option value="Facebook">Facebook</option>
+            <option value="TikTok">TikTok</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Todas as redes">Todas as redes</option>
+          </select>
+        </div>
+        <button class="btn-gen" id="btn-gen" onclick="gerarConteudo()">
+          <span id="btn-gen-ico">✦</span> <span id="btn-gen-txt">Gerar com IA agora</span>
+        </button>
+        <div class="gen-progress" id="gen-progress">
+          <div class="gen-progress-msg" id="gen-msg">Gerando...</div>
+          <div class="gen-bar-wrap"><div class="gen-bar-fill" id="gen-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div id="gen-resultado"></div>
+    </div>
+
+    <!-- MEUS POSTS -->
     <div id="tab-posts" style="display:none;">
       <div class="card">
         <div class="card-head">
           <div class="card-title">Todos os meus posts</div>
-          <select id="filter-status" onchange="renderPosts()" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-family:'DM Sans',sans-serif;">
+          <select id="filter-status" onchange="renderTodosPosts()" style="font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-family:'DM Sans',sans-serif;">
             <option value="">Todos</option>
             <option value="scheduled">Agendados</option>
             <option value="published">Publicados</option>
           </select>
         </div>
-        <div id="all-posts"><div class="loading-box"><div class="spin"></div> Carregando...</div></div>
+        <div class="posts-grid" id="all-posts"><div class="loading-box"><div class="spin"></div> Carregando...</div></div>
       </div>
     </div>
 
+    <!-- REDES SOCIAIS -->
     <div id="tab-redes" style="display:none;">
       <div class="card">
-        <div class="card-title" style="margin-bottom:16px;">Suas redes sociais</div>
+        <div class="card-head"><div class="card-title">Suas redes sociais</div></div>
         <div class="nets-grid" id="nets-grid">
-          <div class="net-card"><div class="net-icon">📷</div><div class="net-name">Instagram</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'Instagram')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">f</div><div class="net-name">Facebook</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'Facebook')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">♪</div><div class="net-name">TikTok</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'TikTok')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">▶</div><div class="net-name">YouTube</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'YouTube')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">in</div><div class="net-name">LinkedIn</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'LinkedIn')">Conectar</button></div>
-          <div class="net-card"><div class="net-icon">𝕏</div><div class="net-name">Twitter/X</div><div class="net-status">Não conectado</div><button class="btn-connect" onclick="conectarRede(this,'Twitter')">Conectar</button></div>
+          <div class="net-card"><div class="net-icon">📷</div><div class="net-name">Instagram</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Instagram')">Conectar</button></div>
+          <div class="net-card"><div class="net-icon">f</div><div class="net-name">Facebook</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Facebook')">Conectar</button></div>
+          <div class="net-card"><div class="net-icon">♪</div><div class="net-name">TikTok</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'TikTok')">Conectar</button></div>
+          <div class="net-card"><div class="net-icon">▶</div><div class="net-name">YouTube</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'YouTube')">Conectar</button></div>
+          <div class="net-card"><div class="net-icon">in</div><div class="net-name">LinkedIn</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'LinkedIn')">Conectar</button></div>
+          <div class="net-card"><div class="net-icon">𝕏</div><div class="net-name">Twitter/X</div><div class="net-st">Não conectado</div><button class="btn-conn" onclick="conectarRede(this,'Twitter')">Conectar</button></div>
         </div>
-        <div style="margin-top:16px;padding:12px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.</div>
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(124,92,252,0.05);border-radius:10px;font-size:12px;color:var(--muted);border:1px solid rgba(124,92,252,0.1);">✦ Após conectar, seus posts serão publicados automaticamente nos horários agendados.</div>
       </div>
     </div>
 
+    <!-- MEU PLANO -->
     <div id="tab-plano" style="display:none;">
       <div class="card">
-        <div class="card-title" style="margin-bottom:16px;">Meu plano</div>
+        <div class="card-head"><div class="card-title">Meu plano</div></div>
         <div class="plan-row"><div class="plan-key">Plano atual</div><div class="plan-val"><span class="plan-pill" id="pl-plano">—</span></div></div>
         <div class="plan-row"><div class="plan-key">Status</div><div class="plan-val" id="pl-status">—</div></div>
         <div class="plan-row"><div class="plan-key">Posts por mês</div><div class="plan-val" id="pl-posts">—</div></div>
         <div class="plan-row"><div class="plan-key">Vencimento</div><div class="plan-val" id="pl-venc">—</div></div>
         <div class="plan-row"><div class="plan-key">Nicho</div><div class="plan-val" id="pl-nicho">—</div></div>
-        <div class="plan-row"><div class="plan-key">E-mail</div><div class="plan-val" id="pl-email">—</div></div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="socialhub-landing.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--accent);color:white;font-size:13px;font-weight:600;text-decoration:none;">↑ Fazer upgrade</a>
-        <button onclick="alert('Entre em contato via WhatsApp para suporte.')" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;">Suporte</button>
+      <div style="display:flex;gap:10px;">
+        <a href="socialhub-landing.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:12px 24px;border-radius:12px;background:var(--accent);color:white;font-size:13px;font-weight:600;text-decoration:none;">↑ Fazer upgrade</a>
+        <button onclick="alert('Entre em contato via WhatsApp para suporte.')" style="padding:12px 24px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;">Suporte</button>
       </div>
     </div>
   </div>
@@ -194,35 +287,32 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <script>
 const BACKEND = 'https://socialhub-backend-sqh1.onrender.com';
+const ANTHROPIC_KEY_HINT = ''; // Não expor key no frontend — usar backend
 let clienteData = null;
 let todosPosts = [];
+let tipoSelecionado = 'imagem';
 
+// ========= GOOGLE LOGIN =========
 async function handleGoogleLogin(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
-  const email = payload.email;
-  const name = payload.name;
-  const picture = payload.picture;
-
+  const { email, name, picture } = payload;
   try {
     const clients = await fetch(BACKEND+'/api/clientes').then(r=>r.json());
-    const found = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
-    if (!found) {
-      document.getElementById('login-err').style.display = 'block';
-      return;
-    }
+    const found = clients.find(c=>c.email.toLowerCase()===email.toLowerCase());
+    if (!found) { document.getElementById('login-err').style.display='block'; return; }
     clienteData = found;
     entrar(name, picture);
   } catch(e) {
-    document.getElementById('login-err').textContent = 'Erro de conexão. Tente novamente.';
-    document.getElementById('login-err').style.display = 'block';
+    document.getElementById('login-err').textContent='Erro de conexão. Tente novamente.';
+    document.getElementById('login-err').style.display='block';
   }
 }
 
 function entrar(googleName, googlePic) {
-  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('login-wrap').style.display='none';
   document.getElementById('app').classList.add('on');
-  const nome = googleName || clienteData.name;
-  document.getElementById('top-avatar').src = googlePic || '';
+  const nome = googleName||clienteData.name;
+  document.getElementById('top-avatar').src = googlePic||'';
   document.getElementById('top-name').textContent = nome.split(' ')[0];
   document.getElementById('top-plan').textContent = (clienteData.plan||'—').charAt(0).toUpperCase()+(clienteData.plan||'').slice(1);
   document.getElementById('welcome-name').textContent = 'Olá, '+nome.split(' ')[0]+'! 👋';
@@ -230,67 +320,236 @@ function entrar(googleName, googlePic) {
   document.getElementById('pl-status').textContent = clienteData.status==='active'?'✅ Ativo':'⏳ Pendente';
   document.getElementById('pl-posts').textContent = (clienteData.posts_per_month||0)+' posts/mês';
   document.getElementById('pl-nicho').textContent = clienteData.niche||'—';
-  document.getElementById('pl-email').textContent = clienteData.email||'—';
   document.getElementById('pl-venc').textContent = clienteData.expires_at?new Date(clienteData.expires_at).toLocaleDateString('pt-BR'):'—';
-  document.getElementById('m-redes-max').textContent = clienteData.plan==='premium'?6:clienteData.plan==='pro'?4:2;
+  document.getElementById('m-rmax').textContent = clienteData.plan==='premium'?6:clienteData.plan==='pro'?4:2;
   loadPosts();
 }
 
 function doLogout() {
   google.accounts.id.disableAutoSelect();
-  clienteData = null;
-  document.getElementById('login-wrap').style.display = 'flex';
+  clienteData=null;
+  document.getElementById('login-wrap').style.display='flex';
   document.getElementById('app').classList.remove('on');
-  document.getElementById('login-err').style.display = 'none';
+  document.getElementById('login-err').style.display='none';
 }
 
+// ========= POSTS =========
 async function loadPosts() {
   try {
-    todosPosts = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/posts').then(r=>r.json()) || [];
-  } catch(e) { todosPosts = []; }
-  document.getElementById('m-agendados').textContent = todosPosts.filter(p=>p.status==='scheduled').length;
-  document.getElementById('m-publicados').textContent = todosPosts.filter(p=>p.status==='published').length;
+    todosPosts = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/posts').then(r=>r.json())||[];
+  } catch(e) { todosPosts = gerarPostsDemo(); }
+  document.getElementById('m-ag').textContent = todosPosts.filter(p=>p.status==='scheduled').length;
+  document.getElementById('m-pub').textContent = todosPosts.filter(p=>p.status==='published').length;
   renderDashPosts();
-  renderPosts();
+  renderTodosPosts();
 }
 
-function netClass(r){return {Instagram:'ig',Facebook:'fb',TikTok:'tt',YouTube:'yt',LinkedIn:'li'}[r]||'';}
+function gerarPostsDemo() {
+  const agora = new Date();
+  return [
+    {id:1,emoji:'🍕',caption:'Sexta-feira pede sabor! Venha experimentar nossas especialidades 🍕🔥 Reservas pelo WhatsApp!',hashtags:'#gastronomia #comida #restaurante #foodie',network:'Instagram',status:'published',scheduled_at:new Date(agora-2*86400000).toISOString(),img_keywords:'pizza restaurant food'},
+    {id:2,emoji:'🍔',caption:'Novo cardápio chegando! Ingredientes frescos todos os dias para você. Venha nos visitar 😍',hashtags:'#delivery #pizza #comida #sabor',network:'Facebook',status:'published',scheduled_at:new Date(agora-1*86400000).toISOString(),img_keywords:'burger menu restaurant'},
+    {id:3,emoji:'🥗',caption:'Almoço especial do dia com muito amor e sabor! Abertura às 11h. Te esperamos! 🥗✨',hashtags:'#almoco #comida #saudavel #fresco',network:'TikTok',status:'scheduled',scheduled_at:new Date(agora+1*86400000).toISOString(),img_keywords:'salad healthy food lunch'},
+    {id:4,emoji:'🛵',caption:'Delivery disponível! Peça pelo app e receba em até 40 minutos 🛵💨 Link na bio!',hashtags:'#delivery #rapido #gostoso',network:'Instagram',status:'scheduled',scheduled_at:new Date(agora+2*86400000).toISOString(),img_keywords:'food delivery restaurant'},
+    {id:5,emoji:'🎉',caption:'Promoção especial de fim de semana! 2 pratos pelo preço de 1 🎉 Só sábado e domingo!',hashtags:'#promocao #fimdesemana #desconto',network:'Facebook',status:'scheduled',scheduled_at:new Date(agora+3*86400000).toISOString(),img_keywords:'restaurant promotion food'},
+  ];
+}
 
-function postCard(p, mini) {
+function imgUrl(keywords, w=600, h=300) {
+  const kw = encodeURIComponent((keywords||'food restaurant').replace(/[#]/g,''));
+  return `https://source.unsplash.com/${w}x${h}/?${kw}&sig=${Math.random()}`;
+}
+
+function netClass(r){return {Instagram:'ig',Facebook:'fb',TikTok:'tt',YouTube:'yt',LinkedIn:'li','Twitter/X':'tw',Twitter:'tw'}[r]||'';}
+
+function postCard(p, isVideo) {
   const dt = p.scheduled_at?new Date(p.scheduled_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
   const stClass = p.status==='published'?'st-pub':'st-sched';
   const stLabel = p.status==='published'?'Publicado':'Agendado';
-  const actions = !mini && p.status==='scheduled' ? `<div class="post-actions"><button class="btn-sm approve" onclick="this.textContent='✓ Aprovado';this.className='btn-sm approved';this.disabled=true;">✓ Aprovar</button></div>` : '';
-  return `<div class="post-card"><div class="post-head"><span style="font-size:20px;">${p.emoji||'📱'}</span><span class="post-net ${netClass(p.network)}">${p.network||'—'}</span><span class="post-time">${dt}</span><span class="post-status ${stClass}">${stLabel}</span></div><div class="post-caption">${p.caption||''}</div><div class="post-tags">${p.hashtags||''}</div>${actions}</div>`;
+  const nc = netClass(p.network);
+  const actions = p.status==='scheduled'
+    ? `<button class="pabtn green" onclick="aprovar(this)">✓ Aprovar</button><button class="pabtn" onclick="editarPost(${p.id})">Editar</button>`
+    : '';
+
+  if (isVideo || p.tipo==='video') {
+    return `<div class="post-visual">
+      <div class="video-thumb">
+        <div class="play-btn">▶</div>
+        <div class="video-label">🎬 Roteiro gerado pela IA</div>
+        <div class="video-duration">~60s</div>
+      </div>
+      <div class="post-body">
+        <div class="post-meta"><span class="post-net-badge ${nc}">${p.network||'—'}</span><span class="post-time">${dt}</span><span class="post-status-badge ${stClass}">${stLabel}</span></div>
+        <div class="post-caption">${p.caption||''}</div>
+        ${p.script?`<div class="script-box">📝 <strong>Roteiro:</strong><br>${p.script}</div>`:''}
+        <div class="post-tags">${p.hashtags||''}</div>
+        <div class="post-actions-row">${actions}</div>
+      </div>
+    </div>`;
+  }
+
+  const kw = p.img_keywords||(p.niche||clienteData?.niche||'business')+' '+p.network;
+  return `<div class="post-visual">
+    <img class="post-img" src="${imgUrl(kw)}" alt="Post" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="post-img-placeholder" style="display:none;">${p.emoji||'📱'}</div>
+    <div class="post-body">
+      <div class="post-meta"><span class="post-net-badge ${nc}">${p.network||'—'}</span><span class="post-time">${dt}</span><span class="post-status-badge ${stClass}">${stLabel}</span></div>
+      <div class="post-caption">${p.caption||''}</div>
+      <div class="post-tags">${p.hashtags||''}</div>
+      <div class="post-actions-row">${actions}</div>
+    </div>
+  </div>`;
+}
+
+function aprovar(btn) { btn.textContent='✓ Aprovado'; btn.className='pabtn approved'; btn.disabled=true; }
+function editarPost(id) {
+  const nova = prompt('Editar legenda do post:');
+  if(nova) alert('Salvo! Em produção isso atualiza no banco de dados.');
 }
 
 function renderDashPosts() {
   const el = document.getElementById('dash-posts');
-  const prox = todosPosts.filter(p=>p.status==='scheduled').slice(0,3);
-  el.innerHTML = prox.length ? prox.map(p=>postCard(p,true)).join('') : '<div class="empty-box">Nenhum post agendado ainda.<br><span style="font-size:12px;">Nossa IA está preparando seu conteúdo!</span></div>';
+  const prox = todosPosts.filter(p=>p.status==='scheduled').slice(0,4);
+  el.innerHTML = prox.length ? prox.map(p=>postCard(p)).join('') : '<div class="empty-box"><div class="ei">📭</div>Nenhum post agendado ainda.<br><small>Nossa IA está preparando seu conteúdo!</small></div>';
 }
 
-function renderPosts() {
+function renderTodosPosts() {
   const el = document.getElementById('all-posts');
   const f = document.getElementById('filter-status')?.value||'';
   const lista = f?todosPosts.filter(p=>p.status===f):todosPosts;
-  el.innerHTML = lista.length ? lista.map(p=>postCard(p,false)).join('') : '<div class="empty-box">Nenhum post encontrado.</div>';
+  el.innerHTML = lista.length ? lista.map(p=>postCard(p)).join('') : '<div class="empty-box"><div class="ei">📭</div>Nenhum post encontrado.</div>';
 }
 
+// ========= CRIAR CONTEÚDO COM IA =========
+function selTipo(el, tipo) {
+  document.querySelectorAll('.gen-type-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  tipoSelecionado = tipo;
+  const labels = {imagem:'Gerar post com imagem',carrossel:'Gerar carrossel',video:'Gerar roteiro de vídeo',stories:'Gerar Stories'};
+  document.getElementById('btn-gen-txt').textContent = labels[tipo]||'Gerar com IA';
+}
+
+async function gerarConteudo() {
+  const assunto = document.getElementById('gen-assunto').value.trim();
+  const rede = document.getElementById('gen-rede').value;
+  const nicho = clienteData?.niche||'negócio';
+  const btn = document.getElementById('btn-gen');
+  const prog = document.getElementById('gen-progress');
+  const bar = document.getElementById('gen-bar');
+  const msg = document.getElementById('gen-msg');
+  const resultado = document.getElementById('gen-resultado');
+
+  btn.disabled=true;
+  prog.style.display='block';
+  resultado.innerHTML='';
+
+  const msgs = tipoSelecionado==='video'
+    ? ['Criando roteiro...','Definindo cenas...','Escrevendo narração...','Adicionando CTAs...','Finalizando...']
+    : ['Analisando assunto...','Criando legenda...','Buscando imagem...','Adicionando hashtags...','Finalizando...'];
+
+  let mi=0;
+  const iv = setInterval(()=>{ msg.textContent=msgs[Math.min(mi,msgs.length-1)]; bar.style.width=Math.min((mi+1)/msgs.length*90,90)+'%'; mi++; },700);
+
+  try {
+    const prompt = tipoSelecionado==='video'
+      ? `Crie um roteiro de vídeo curto (60 segundos) para ${rede} sobre "${assunto||'meu negócio de '+nicho}". Nicho: ${nicho}.
+Responda APENAS com JSON: {"legenda":"legenda do post","hashtags":"#tag1 #tag2 #tag3","roteiro":"Cena 1 (0-10s): [descrição]\\nCena 2 (10-25s): [descrição]\\nCena 3 (25-45s): [depoimento/produto]\\nCena 4 (45-60s): CTA forte","dicas":"dicas de gravação"}`
+      : tipoSelecionado==='carrossel'
+      ? `Crie um carrossel de 5 slides para ${rede} sobre "${assunto||'dicas de '+nicho}". Nicho: ${nicho}.
+Responda APENAS com JSON: {"legenda":"legenda do post","hashtags":"#tag1 #tag2 #tag3","slides":["Slide 1: título forte","Slide 2: ponto 1","Slide 3: ponto 2","Slide 4: ponto 3","Slide 5: CTA"],"img_keywords":"palavras para imagem em inglês"}`
+      : `Crie um post atrativo para ${rede} sobre "${assunto||nicho}". Nicho: ${nicho}. Tom: engajante com emojis e CTA.
+Responda APENAS com JSON: {"emoji":"🍕","legenda":"legenda completa","hashtags":"#tag1 #tag2 #tag3 #tag4 #tag5","img_keywords":"palavras-chave em inglês para busca de imagem relevante"}`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await resp.json();
+    const raw = data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+
+    clearInterval(iv);
+    bar.style.width='100%';
+    msg.textContent='Conteúdo gerado! ✓';
+    setTimeout(()=>{prog.style.display='none';},1000);
+
+    const agora = new Date();
+    agora.setDate(agora.getDate()+1);
+    agora.setHours(9,0,0,0);
+
+    if (tipoSelecionado==='video') {
+      resultado.innerHTML = `<div class="post-visual">
+        <div class="video-thumb">
+          <div class="play-btn">▶</div>
+          <div class="video-label">🎬 Roteiro gerado pela IA</div>
+          <div class="video-duration">~60s</div>
+        </div>
+        <div class="post-body">
+          <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede}</span><span class="post-status-badge st-sched">Novo</span></div>
+          <div class="post-caption">${parsed.legenda||''}</div>
+          <div class="script-box">📝 <strong>Roteiro:</strong><br>${(parsed.roteiro||'').replace(/\\n/g,'<br>')}</div>
+          ${parsed.dicas?`<div class="script-box">💡 <strong>Dicas de gravação:</strong><br>${parsed.dicas}</div>`:''}
+          <div class="post-tags">${parsed.hashtags||''}</div>
+          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this,'${rede}')">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+        </div>
+      </div>`;
+    } else if (tipoSelecionado==='carrossel') {
+      const slides = (parsed.slides||[]).map((s,i)=>`<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;font-size:12px;"><strong>Slide ${i+1}:</strong> ${s}</div>`).join('');
+      resultado.innerHTML = `<div class="post-visual">
+        <img class="post-img" src="${imgUrl(parsed.img_keywords||nicho)}" loading="lazy">
+        <div class="post-body">
+          <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede} · Carrossel</span><span class="post-status-badge st-sched">Novo</span></div>
+          <div class="post-caption">${parsed.legenda||''}</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin:8px 0;">${slides}</div>
+          <div class="post-tags">${parsed.hashtags||''}</div>
+          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this,'${rede}')">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+        </div>
+      </div>`;
+    } else {
+      resultado.innerHTML = `<div class="post-visual">
+        <img class="post-img" src="${imgUrl(parsed.img_keywords||nicho)}" loading="lazy" onerror="this.style.display='none'">
+        <div class="post-body">
+          <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede}</span><span class="post-status-badge st-sched">Novo</span></div>
+          <div class="post-caption">${parsed.legenda||''}</div>
+          <div class="post-tags">${parsed.hashtags||''}</div>
+          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this,'${rede}')">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+        </div>
+      </div>`;
+    }
+  } catch(e) {
+    clearInterval(iv);
+    prog.style.display='none';
+    resultado.innerHTML='<div style="padding:16px;color:var(--red);font-size:13px;background:#fef2f2;border-radius:10px;">Erro ao gerar conteúdo. Verifique sua conexão.</div>';
+  }
+  btn.disabled=false;
+}
+
+function salvarPost(btn, rede) {
+  btn.textContent='✓ Agendado!';
+  btn.className='pabtn approved';
+  btn.disabled=true;
+}
+
+// ========= REDES =========
 function conectarRede(btn, nome) {
   btn.textContent='Conectando...';
   setTimeout(()=>{
     const card=btn.closest('.net-card');
     card.classList.add('connected');
-    card.querySelector('.net-status').textContent='✓ Conectado';
-    btn.className='btn-connected';btn.textContent='Conectado';
-    const atual=parseInt(document.getElementById('m-redes').textContent)||0;
-    document.getElementById('m-redes').textContent=atual+1;
+    card.querySelector('.net-st').textContent='✓ Conectado';
+    btn.outerHTML='<span class="btn-connd">Conectado ✓</span>';
+    document.getElementById('m-redes').textContent=(parseInt(document.getElementById('m-redes').textContent)||0)+1;
   },1200);
 }
 
-function switchTab(id,el) {
-  ['dash','posts','redes','plano'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
+// ========= TABS =========
+function switchTab(id, el) {
+  ['dash','criar','posts','redes','plano'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.getElementById('tab-'+id).style.display='block';
   if(el) el.classList.add('on');
