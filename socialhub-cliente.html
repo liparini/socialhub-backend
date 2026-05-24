@@ -275,6 +275,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* TEMPLATE RETRO */
 .retro-slide-tpl{position:fixed;left:-9999px;top:0;width:1080px;height:1080px;background:#F5E8C8;font-family:'Arial Black','Impact',sans-serif;overflow:hidden;box-sizing:border-box;}
 .retro-slide-tpl *{box-sizing:border-box;}
+
+/* SELETOR DE ESTILO */
+.style-selector{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.style-btn{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s;font-family:'DM Sans',sans-serif;flex:1;min-width:120px;justify-content:center;}
+.style-btn:hover{border-color:var(--accent2);color:var(--text);}
+.style-btn.sel{border-color:var(--accent);background:rgba(124,92,252,0.08);color:var(--accent);font-weight:600;}
+.style-btn .style-icon{font-size:20px;}
+.style-label{font-size:11px;color:var(--muted);text-align:center;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;}
 </style>
 </head>
 <body>
@@ -355,6 +363,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
             <span class="gico">📱</span>Stories
           </div>
         </div>
+        <!-- Seletor de estilo visual -->
+        <div class="style-label">Estilo das imagens</div>
+        <div class="style-selector" id="style-selector">
+          <button class="style-btn sel" id="sbtn-foto" onclick="selEstilo('foto', this)">
+            <span class="style-icon">📸</span> Foto real
+          </button>
+          <button class="style-btn" id="sbtn-retro" onclick="selEstilo('retro', this)">
+            <span class="style-icon">🎨</span> Retro
+          </button>
+          <button class="style-btn" id="sbtn-ia" onclick="selEstilo('ia', this)">
+            <span class="style-icon">✨</span> IA Generativa
+          </button>
+        </div>
+
         <div class="gen-inputs">
           <input type="text" id="gen-assunto" placeholder="Assunto do post (ex: promoção de sexta, novo produto, dica do dia...)">
           <select id="gen-rede">
@@ -535,6 +557,7 @@ async function loadPosts() {
   renderTodosPosts();
 }
 
+
 function gerarPostsDemo() {
   const agora = new Date();
   return [
@@ -564,7 +587,19 @@ function wrapText(ctx, text, maxW, maxLines) {
   return lines;
 }
 
-const RETRO_PAL = { bg:'#F5E8C8', dark:'#1A2744', teal:'#1E4D6B', rust:'#A63B2D', cream:'#FDF6E3' };
+// ===================================================
+// SISTEMA DE RENDERIZAÇÃO MULTI-ESTILO
+// ===================================================
+
+let _estiloSlide = 'foto'; // 'foto' | 'retro' | 'ia'
+
+function selEstilo(estilo, btn) {
+  _estiloSlide = estilo;
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+const RETRO_PAL = { bg:'#F5E8C8', dark:'#1A2744', cream:'#FDF6E3' };
 const NET_PAL = {
   Instagram:{accent:'#C13584',teal:'#6B1E4D'},
   Facebook:{accent:'#1877F2',teal:'#1E3D6B'},
@@ -574,70 +609,164 @@ const NET_PAL = {
   default:{accent:'#7c5cfc',teal:'#2D1E6B'}
 };
 
-async function renderizarSlideRetro(canvasEl, titulo, network) {
-  const pal = NET_PAL[network]||NET_PAL.default;
+// ── ESTILO 1: FOTO REAL (Pexels) ──────────────────
+async function renderizarFotoReal(canvasEl, titulo, network, imageUrl) {
+  const W = 1080, H = 1080;
+  canvasEl.width = W; canvasEl.height = H;
+  const ctx = canvasEl.getContext('2d');
   const clean = limparTextoSlide(titulo);
-  const numMatch = clean.match(/^(\d+)[.\)\s]/);
-  const numero = numMatch ? numMatch[1] : null;
-  const semNum = numero ? clean.replace(/^\d+[.\)\s]+/,'').trim() : clean;
-  const palavras = semNum.split(' ');
-  const mid = Math.ceil(palavras.length/2);
-  const l1 = palavras.slice(0,mid).join(' ');
-  const l2 = palavras.slice(mid).join(' ');
-  const partes = semNum.split(/[\n]/).map(s=>s.trim()).filter(Boolean);
+  const pal = NET_PAL[network] || NET_PAL.default;
 
-  const tpl = document.createElement('div');
-  tpl.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1080px;overflow:hidden;background:'+RETRO_PAL.bg+';font-family:"Arial Black",Arial,sans-serif;';
+  const drawOverlay = (imgEl) => {
+    ctx.clearRect(0,0,W,H);
+    if (imgEl) {
+      const r = Math.max(W/imgEl.naturalWidth, H/imgEl.naturalHeight);
+      ctx.drawImage(imgEl, (W-imgEl.naturalWidth*r)/2, (H-imgEl.naturalHeight*r)/2, imgEl.naturalWidth*r, imgEl.naturalHeight*r);
+    } else {
+      const g = ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0,pal.teal); g.addColorStop(1,pal.accent);
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    }
+    // Gradiente escuro bottom
+    const grad = ctx.createLinearGradient(0, H*0.5, 0, H);
+    grad.addColorStop(0,'rgba(0,0,0,0)'); grad.addColorStop(0.5,'rgba(0,0,0,0.72)'); grad.addColorStop(1,'rgba(0,0,0,0.92)');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+    // Badge rede (topo)
+    ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.roundRect(36,36,200,52,26); ctx.fill();
+    ctx.font='bold 26px sans-serif'; ctx.fillStyle='white'; ctx.textAlign='left'; ctx.fillText(network||'Post',62,71);
+    // Texto
+    const fsize = clean.length>60?38:clean.length>40?44:52;
+    ctx.font=`bold ${fsize}px sans-serif`; ctx.textAlign='center'; ctx.fillStyle='white';
+    const lines = wrapText(ctx, clean, W-120, 4);
+    const lh = fsize*1.3, textH=lines.length*lh, boxY=H-textH-(deveWatermark()?100:70);
+    ctx.fillStyle='rgba(0,0,0,0.42)'; ctx.beginPath(); ctx.roundRect(40,boxY-20,W-80,textH+16,16); ctx.fill();
+    ctx.fillStyle='white'; lines.forEach((ln,i)=>ctx.fillText(ln,W/2,boxY+i*lh+fsize));
+    if(deveWatermark()){ ctx.font='bold 24px sans-serif'; ctx.fillStyle='rgba(255,255,255,0.28)'; ctx.fillText('✦ SocialHub',W/2,H-28); }
+  };
 
-  tpl.innerHTML = `<div style="width:1080px;height:1080px;background:${RETRO_PAL.bg};position:relative;overflow:hidden;">
-    <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(0,0,0,0.015) 0,rgba(0,0,0,0.015) 1px,transparent 1px,transparent 9px);"></div>
-    <div style="position:absolute;top:20px;left:20px;right:20px;bottom:20px;border:3px dashed rgba(30,77,107,0.18);border-radius:10px;"></div>
-    <div style="position:absolute;top:28px;right:60px;font-size:60px;opacity:0.25;">❄️</div>
-    <div style="position:absolute;top:28px;left:60px;font-size:44px;opacity:0.2;">✦</div>
-    <div style="padding:64px 72px 0;">
-      ${numero?`<div style="display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:${pal.teal};border:4px solid ${RETRO_PAL.cream};margin-bottom:14px;box-shadow:0 4px 16px rgba(0,0,0,0.25);"><span style="font-size:38px;font-weight:900;color:white;font-family:'Arial Black',Arial;">${numero}</span></div>`:''}
-      <div style="font-size:${l1.length>14?72:82}px;font-weight:900;color:${RETRO_PAL.dark};line-height:1.0;letter-spacing:-1px;text-transform:uppercase;">${l1}</div>
-      ${l2?`<div style="display:inline-block;background:${pal.accent};padding:8px 22px 12px;margin:8px 0 0;border-radius:5px;"><span style="font-size:${l2.length>14?62:72}px;font-weight:900;color:white;line-height:1.0;text-transform:uppercase;">${l2}</span></div>`:''}
-    </div>
-    <div style="margin:20px 72px 0;height:3px;background:linear-gradient(to right,${pal.teal},transparent);border-radius:2px;"></div>
-    <div style="padding:22px 72px 0;display:flex;flex-direction:column;gap:16px;">
-      ${partes.slice(1,5).map(item=>{
-        const pts=item.split(' - ');
-        return `<div style="display:flex;align-items:flex-start;gap:18px;">
-          <div style="width:44px;height:44px;border-radius:50%;background:${pal.teal};flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;">
-            <div style="width:16px;height:16px;border-radius:50%;background:white;"></div>
-          </div>
-          <div>
-            <div style="font-size:28px;font-weight:900;color:${RETRO_PAL.dark};text-transform:uppercase;letter-spacing:0.3px;">${pts[0]}</div>
-            ${pts[1]?`<div style="font-size:22px;color:#555;font-family:Arial,sans-serif;font-weight:normal;margin-top:2px;">${pts[1]}</div>`:''}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-    <div style="position:absolute;bottom:50px;left:55px;right:55px;background:${pal.teal};border-radius:14px;padding:20px 30px;display:flex;align-items:center;gap:16px;">
-      <div style="font-size:32px;">💡</div>
-      <div style="font-size:22px;color:white;font-weight:900;line-height:1.3;">${network} · ${deveWatermark()?'✦ SocialHub · ':''}Engaje e cresça! 🚀</div>
-    </div>
-  </div>`;
-
-  document.body.appendChild(tpl);
-  try {
-    const rendered = await html2canvas(tpl.firstElementChild, {
-      width:1080, height:1080, scale:1, useCORS:true, logging:false, backgroundColor:RETRO_PAL.bg
-    });
-    document.body.removeChild(tpl);
-    canvasEl.width=1080; canvasEl.height=1080;
-    canvasEl.getContext('2d').drawImage(rendered,0,0,1080,1080);
-  } catch(e) {
-    document.body.removeChild(tpl);
-    const ctx=canvasEl.getContext('2d');
-    canvasEl.width=1080;canvasEl.height=1080;
-    ctx.fillStyle=RETRO_PAL.bg;ctx.fillRect(0,0,1080,1080);
-    ctx.font='bold 48px Arial';ctx.fillStyle=RETRO_PAL.dark;ctx.textAlign='center';
-    const wlines=wrapText(ctx,clean,900,5);
-    wlines.forEach((l,i)=>ctx.fillText(l,540,300+i*70));
+  if (imageUrl) {
+    const img = new Image(); img.crossOrigin='anonymous';
+    await new Promise(res=>{ img.onload=()=>{drawOverlay(img);res();}; img.onerror=()=>{drawOverlay(null);res();}; img.src=imageUrl; });
+  } else {
+    drawOverlay(null);
   }
 }
+
+// ── ESTILO 2: RETRO (HTML template) ───────────────
+async function renderizarRetro(canvasEl, titulo, network) {
+  const pal = NET_PAL[network]||NET_PAL.default;
+  const clean = limparTextoSlide(titulo);
+  const numMatch = clean.match(/^(\d+)[.)]\s*/);
+  const numero = numMatch ? numMatch[1] : null;
+  const semNum = (numero ? clean.replace(/^\d+[.)]\s*/,'') : clean).trim();
+  const linhas = semNum.split(/\n|–|—/).map(s=>s.trim()).filter(Boolean);
+  const tituloPrinc = linhas[0]||semNum;
+  const itens = linhas.slice(1,5);
+  const palavrasT = tituloPrinc.split(' ');
+  const mid = Math.ceil(palavrasT.length/2);
+  const tL1 = palavrasT.slice(0,mid).join(' ');
+  const tL2 = palavrasT.slice(mid).join(' ');
+  const tLen = tituloPrinc.length;
+  const tSize = tLen>40?52:tLen>28?62:tLen>18?72:82;
+  const W=1080,H=1080;
+  const tpl=document.createElement('div');
+  tpl.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;overflow:hidden;`;
+  tpl.innerHTML=`<div style="width:1080px;height:1080px;background:#F5E8C8;position:relative;overflow:hidden;font-family:'Arial Black',Arial,sans-serif;">
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(0,0,0,0.012) 0,rgba(0,0,0,0.012) 1px,transparent 1px,transparent 12px);"></div>
+  <div style="position:absolute;top:22px;left:22px;right:22px;bottom:22px;border:3.5px dashed rgba(30,77,107,0.2);border-radius:12px;"></div>
+  <div style="position:absolute;top:30px;left:30px;right:30px;bottom:30px;border:1.5px solid rgba(30,77,107,0.1);border-radius:9px;"></div>
+  <div style="position:absolute;top:40px;right:50px;width:130px;height:130px;border-radius:50%;background:rgba(30,77,107,0.08);"></div>
+  <div style="position:absolute;top:58px;right:68px;font-size:64px;opacity:0.3;line-height:1;">❄️</div>
+  <div style="position:absolute;top:46px;left:60px;font-size:32px;opacity:0.25;">✦</div>
+  ${numero?`<div style="position:absolute;top:52px;left:72px;width:84px;height:84px;border-radius:50%;background:${pal.teal};box-shadow:0 6px 20px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-size:44px;font-weight:900;color:white;line-height:1;">${numero}</span></div>`:''}
+  <div style="padding:${numero?'168px':'80px'} 80px 0 80px;">
+    <div style="font-size:${tSize}px;font-weight:900;color:#1A2744;line-height:1.0;letter-spacing:-1.5px;text-transform:uppercase;margin-bottom:6px;">${tL1}</div>
+    ${tL2?`<div style="display:inline-block;background:${pal.accent};padding:6px 24px 10px;border-radius:6px;margin-bottom:24px;"><span style="font-size:${tSize}px;font-weight:900;color:white;line-height:1.05;text-transform:uppercase;letter-spacing:-1px;">${tL2}</span></div>`:`<div style="margin-bottom:24px;"></div>`}
+  </div>
+  <div style="margin:0 80px 28px;height:3px;background:linear-gradient(to right,${pal.teal},rgba(30,77,107,0.1));border-radius:3px;"></div>
+  ${itens.length>0?`<div style="padding:0 80px;display:flex;flex-direction:column;gap:20px;">
+    ${itens.map(item=>{const p=item.split(' - ');return`<div style="display:flex;align-items:flex-start;gap:20px;"><div style="width:48px;height:48px;min-width:48px;border-radius:50%;background:${pal.teal};display:flex;align-items:center;justify-content:center;margin-top:2px;box-shadow:0 3px 10px rgba(0,0,0,0.2);"><div style="width:18px;height:18px;border-radius:50%;background:white;"></div></div><div><div style="font-size:28px;font-weight:900;color:#1A2744;text-transform:uppercase;">${p[0]}</div>${p[1]?`<div style="font-size:23px;color:#555;font-family:Arial;font-weight:400;margin-top:3px;">${p.slice(1).join(' - ')}</div>`:''}</div></div>`;}).join('')}
+  </div>`:
+  `<div style="padding:0 80px;"><div style="font-size:32px;color:#444;font-family:Arial;line-height:1.6;">${clean.slice(0,200)}</div></div>`}
+  <div style="position:absolute;bottom:52px;left:58px;right:58px;background:${pal.teal};border-radius:16px;padding:22px 32px;display:flex;align-items:center;gap:18px;box-shadow:0 6px 20px rgba(0,0,0,0.2);">
+    <div style="font-size:34px;flex-shrink:0;">💡</div>
+    <div style="font-size:24px;color:white;font-weight:900;font-family:'Arial Black',Arial;line-height:1.3;">${deveWatermark()?'✦ SocialHub · ':''}Curta · Comente · Compartilhe 🚀</div>
+  </div>
+</div>`;
+  document.body.appendChild(tpl);
+  try {
+    const rendered = await html2canvas(tpl.firstElementChild,{width:W,height:H,scale:1,useCORS:true,logging:false,backgroundColor:'#F5E8C8',allowTaint:false});
+    document.body.removeChild(tpl);
+    canvasEl.width=W; canvasEl.height=H;
+    canvasEl.getContext('2d').drawImage(rendered,0,0,W,H);
+  } catch(e) {
+    if(document.body.contains(tpl)) document.body.removeChild(tpl);
+    await renderizarFotoReal(canvasEl, titulo, network, null);
+  }
+}
+
+// ── ESTILO 3: IA GENERATIVA (Pollinations.ai — gratuito) ──
+async function renderizarIAGenerativa(canvasEl, titulo, network) {
+  const clean = limparTextoSlide(titulo);
+  const pal = NET_PAL[network]||NET_PAL.default;
+  canvasEl.width=1080; canvasEl.height=1080;
+  const ctx = canvasEl.getContext('2d');
+  // Loading state
+  const g=ctx.createLinearGradient(0,0,1080,1080);
+  g.addColorStop(0,'#1a1a2e'); g.addColorStop(1,'#16213e');
+  ctx.fillStyle=g; ctx.fillRect(0,0,1080,1080);
+  ctx.font='bold 36px sans-serif'; ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.textAlign='center';
+  ctx.fillText('✨ Gerando imagem com IA...', 540, 540);
+
+  // Prompt em inglês para melhor resultado
+  const palavrasChave = clean.replace(/[^\w\s]/g,'').toLowerCase().split(' ').filter(w=>w.length>3).slice(0,5).join(' ');
+  const prompts = {
+    Instagram: `instagram post, professional photography, ${palavrasChave}, vibrant colors, high quality, 4k`,
+    Facebook: `facebook post image, lifestyle photography, ${palavrasChave}, bright natural light`,
+    LinkedIn: `professional business photo, corporate style, ${palavrasChave}, clean background`,
+    TikTok: `trendy social media content, colorful, ${palavrasChave}, dynamic energy`,
+    default: `social media post, professional photo, ${palavrasChave}, high quality`
+  };
+  const prompt = prompts[network]||prompts.default;
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&nologo=true&model=flux&seed=${Math.floor(Math.random()*9999)}`;
+
+  const img = new Image(); img.crossOrigin='anonymous';
+  await new Promise(res => {
+    img.onload = async () => { await renderizarFotoReal(canvasEl, titulo, network, img.src); res(); };
+    img.onerror = async () => {
+      // Fallback: retro se pollinations falhar
+      await renderizarRetro(canvasEl, titulo, network); res();
+    };
+    img.src = url;
+    // Timeout de 20s
+    setTimeout(()=>{ if(!img.complete){ img.onerror(); } },20000);
+  });
+}
+
+// ── FUNÇÃO PRINCIPAL ──────────────────────────────
+async function renderizarSlide(canvasEl, titulo, network, imageUrl) {
+  const estilo = _estiloSlide || 'foto';
+  if (estilo === 'retro') {
+    await renderizarRetro(canvasEl, titulo, network);
+  } else if (estilo === 'ia') {
+    await renderizarIAGenerativa(canvasEl, titulo, network);
+  } else {
+    // foto: usar imageUrl do Pexels se disponível, senão IA
+    if (imageUrl) {
+      await renderizarFotoReal(canvasEl, titulo, network, imageUrl);
+    } else {
+      await renderizarIAGenerativa(canvasEl, titulo, network);
+    }
+  }
+}
+
+// Compat wrappers
+async function desenharCard(cv,img,emoji,titulo,network){ await renderizarSlide(cv,titulo,network,img?.src||null); }
+function desenharCardGradiente(cv,emoji,titulo,network){ renderizarSlide(cv,titulo,network,null); }
+async function gerarCardCanvas(cv,emoji,cap,network){ await renderizarSlide(cv,cap,network,null); }
+function desenharCardComBase(cv,base,titulo,network){ renderizarSlide(cv,titulo,network,null); }
+async function renderizarSlideRetro(cv,titulo,network){ await renderizarSlide(cv,titulo,network,null); }
+
 
 async function desenharCard(cv,img,emoji,titulo,network){ await renderizarSlideRetro(cv,titulo,network); }
 function desenharCardGradiente(cv,emoji,titulo,network){ renderizarSlideRetro(cv,titulo,network); }
@@ -980,26 +1109,16 @@ async function renderPainelCriador(container, parsed, redeDefault, tipo, assunto
 
     // Renderizar cada canvas
     for (let i=0; i<totalSlides; i++) {
-      const mainCv = isCarrossel ? document.getElementById('tmb_'+slID+'_'+i) : null;
-      const url = urls[i] || urls[0];
+      const thumbCv = isCarrossel ? document.getElementById('tmb_'+slID+'_'+i) : null;
+      const url = urls[i] || urls[0] || null;
       const texto = slidesArr[i];
-      await new Promise(resolve => {
-        const draw = (imgEl) => {
-          if (mainCv) desenharCard(mainCv, imgEl, '', texto, redeDefault, '');
-          // Renderizar no mockup se for o primeiro
-          if (i === 0) {
-            const mockCv = document.getElementById('mockcanvas_'+slID);
-            if (mockCv) desenharCard(mockCv, imgEl, '', texto, redeDefault, '');
-          }
-          resolve();
-        };
-        if (url) {
-          const img = new Image(); img.crossOrigin='anonymous';
-          img.onload = () => draw(img);
-          img.onerror = () => draw(null);
-          img.src = url;
-        } else { draw(null); resolve(); }
-      });
+      // Renderizar thumb
+      if (thumbCv) await renderizarSlide(thumbCv, texto, redeDefault, url);
+      // Renderizar mockup apenas para o primeiro
+      if (i === 0) {
+        const mockCv = document.getElementById('mockcanvas_'+slID);
+        if (mockCv) await renderizarSlide(mockCv, texto, redeDefault, url);
+      }
     }
   } catch(e) {
     for (let i=0; i<totalSlides; i++) {
@@ -1029,14 +1148,9 @@ function pcGoSlide(slID, idx) {
   // Renderizar no mockup
   const mockCv = document.getElementById('mockcanvas_'+slID);
   if (!mockCv) return;
-  const url = cr.photoUrls[idx] || cr.photoUrls[0];
+  const url = cr.photoUrls[idx] || cr.photoUrls[0] || null;
   const texto = cr.slides[idx]||'';
-  if (url) {
-    const img = new Image(); img.crossOrigin='anonymous';
-    img.onload=()=>desenharCard(mockCv,img,'',texto,cr.rede,'');
-    img.onerror=()=>desenharCardGradiente(mockCv,'',texto,cr.rede,'');
-    img.src=url;
-  } else { desenharCardGradiente(mockCv,'',texto,cr.rede,''); }
+  renderizarSlide(mockCv, texto, cr.rede, url);
 }
 
 function pcUpdateSlide(slID, texto) {
@@ -1078,18 +1192,14 @@ function pcSetPreview(slID, rede) {
   const mockCv = document.getElementById('mockcanvas_'+slID);
   if(!mockCv) return;
   const idx = cr.current||0;
-  const url = cr.photoUrls[idx] || cr.photoUrls[0];
+  const url = cr.photoUrls[idx]||cr.photoUrls[0]||null;
   const texto = cr.slides[idx]||'';
-  if(url){ const img=new Image();img.crossOrigin='anonymous';img.onload=()=>desenharCard(mockCv,img,'',texto,rede,'');img.onerror=()=>desenharCardGradiente(mockCv,'',texto,rede,'');img.src=url; }
-  else desenharCardGradiente(mockCv,'',texto,rede,'');
-  // Redesenhar todos os thumbs com a nova rede
+  renderizarSlide(mockCv, texto, rede, url);
   const cr2 = window._criadores[slID];
   cr2.slides.forEach((txt,i)=>{
     const tcv=document.getElementById('tmb_'+slID+'_'+i);
     if(!tcv) return;
-    const u=cr2.photoUrls[i]||cr2.photoUrls[0];
-    if(u){const img=new Image();img.crossOrigin='anonymous';img.onload=()=>desenharCard(tcv,img,'',txt,rede,'');img.onerror=()=>desenharCardGradiente(tcv,'',txt,rede,'');img.src=u;}
-    else desenharCardGradiente(tcv,'',txt,rede,'');
+    renderizarSlide(tcv, txt, rede, cr2.photoUrls[i]||cr2.photoUrls[0]||null);
   });
 }
 
@@ -1402,6 +1512,40 @@ async function carregarTokens() {
 
 function conectarRede() {} // stub legado
 
+
+// ========= FUNÇÕES FALTANDO =========
+function renderDashPosts() {
+  const el = document.getElementById('dash-posts');
+  if(!el) return;
+  const prox = todosPosts.filter(p=>p.status==='scheduled').slice(0,3);
+  if(!prox.length){
+    el.innerHTML='<div class="empty-box"><div class="ei">📭</div>Nenhum post agendado ainda.<br><span style="font-size:12px;">Crie seu primeiro post na aba "Criar post"!</span></div>';
+    return;
+  }
+  el.innerHTML = prox.map(p => postCard(p, true)).join('');
+}
+
+function renderTodosPosts() {
+  const el = document.getElementById('all-posts');
+  if(!el) return;
+  const filtro = document.getElementById('filter-status')?.value||'';
+  const lista = filtro ? todosPosts.filter(p=>p.status===filtro) : todosPosts;
+  if(!lista.length){
+    el.innerHTML='<div class="empty-box"><div class="ei">📭</div>Nenhum post encontrado.</div>';
+    return;
+  }
+  el.innerHTML = lista.map(p => postCard(p, false)).join('');
+}
+
+function selTipo(el, tipo) {
+  document.querySelectorAll('.gen-type-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  tipoSelecionado = tipo;
+  const labels = {imagem:'Gerar post com imagem',carrossel:'Gerar carrossel',video:'Gerar roteiro de vídeo',stories:'Gerar Stories'};
+  const btn = document.getElementById('btn-gen-txt');
+  if(btn) btn.textContent = labels[tipo]||'Gerar com IA';
+}
+
 // ========= TABS =========
 function switchTab(id, el) {
   ['dash','criar','posts','redes','plano'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
@@ -1654,6 +1798,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* TEMPLATE RETRO */
 .retro-slide-tpl{position:fixed;left:-9999px;top:0;width:1080px;height:1080px;background:#F5E8C8;font-family:'Arial Black','Impact',sans-serif;overflow:hidden;box-sizing:border-box;}
 .retro-slide-tpl *{box-sizing:border-box;}
+
+/* SELETOR DE ESTILO */
+.style-selector{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.style-btn{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s;font-family:'DM Sans',sans-serif;flex:1;min-width:120px;justify-content:center;}
+.style-btn:hover{border-color:var(--accent2);color:var(--text);}
+.style-btn.sel{border-color:var(--accent);background:rgba(124,92,252,0.08);color:var(--accent);font-weight:600;}
+.style-btn .style-icon{font-size:20px;}
+.style-label{font-size:11px;color:var(--muted);text-align:center;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;}
 </style>
 </head>
 <body>
