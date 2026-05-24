@@ -246,6 +246,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nc2-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:500;white-space:nowrap;transition:all .15s;flex-shrink:0;}
 .nc2-btn:hover{border-color:var(--accent);color:var(--accent);}
 .nc2-btn.connected{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+
+/* BRAND ICONS */
+.brand-icon{width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.brand-icon svg{width:26px;height:26px;}
+.bi-ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);}
+.bi-fb{background:#1877F2;}
+.bi-tt{background:#000;}
+.bi-yt{background:#FF0000;}
+.bi-li{background:#0A66C2;}
+.bi-tw{background:#000;}
+/* NET CARD v3 */
+.nc3{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;background:var(--surface);transition:all .2s;cursor:pointer;}
+.nc3:hover{border-color:var(--border2);box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+.nc3.connected{border-color:#22c55e;background:#f0fdf4;}
+.nc3-body{flex:1;min-width:0;}
+.nc3-name{font-size:13px;font-weight:600;color:var(--text);}
+.nc3-status{font-size:11px;color:var(--muted);margin-top:2px;}
+.nc3.connected .nc3-status{color:#16a34a;font-weight:500;}
+.nc3-btn{padding:7px 16px;border-radius:99px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:500;transition:all .15s;flex-shrink:0;}
+.nc3-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nc3.connected .nc3-btn{border-color:#22c55e;color:#16a34a;background:#dcfce7;}
+/* TOAST */
+.sh-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:white;padding:12px 24px;border-radius:99px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90vw;}
+.sh-toast.show{opacity:1;}
 </style>
 </head>
 <body>
@@ -1103,17 +1127,34 @@ function pcGetRedes(slID) {
   return [...document.querySelectorAll(`#redes_${slID} input:checked`)].map(i=>i.value);
 }
 
-function pcPublicar(slID) {
-  const cr=window._criadores?.[slID]; if(!cr) return;
-  const redes=pcGetRedes(slID);
-  const cap=document.getElementById('cap_'+slID)?.value||'';
-  const tags=document.getElementById('tags_'+slID)?.value||'';
-  const texto=cap+'\n\n'+tags;
-  if(!redes.length){alert('Selecione pelo menos uma rede!');return;}
-  navigator.clipboard?.writeText(texto);
-  const urls={Instagram:'https://www.instagram.com/',Facebook:'https://www.facebook.com/',TikTok:'https://www.tiktok.com/',LinkedIn:'https://www.linkedin.com/',Twitter:'https://twitter.com/'};
-  alert(`📋 Legenda copiada!\n\nAbrindo: ${redes.join(', ')}\n\nCole o texto e faça upload das imagens baixadas.`);
-  redes.forEach((r,i)=>{ setTimeout(()=>window.open(urls[r]||'https://www.instagram.com/','_blank'), i*800); });
+async function pcPublicar(slID) {
+  const cr = window._criadores?.[slID]; if(!cr) return;
+  const redes = pcGetRedes(slID);
+  const cap = document.getElementById('cap_'+slID)?.value||'';
+  const tags = document.getElementById('tags_'+slID)?.value||'';
+  if (!redes.length) { showToast('⚠️ Selecione pelo menos uma rede!'); return; }
+
+  // Copiar legenda
+  try { await navigator.clipboard.writeText(cap+'\n\n'+tags); } catch(e) {}
+
+  // Baixar imagens automaticamente antes de abrir as redes
+  pcBaixarTodos(slID, cr.rede, cr.total);
+
+  let delay = 600;
+  for (const redeId of redes) {
+    const conf = REDES_CONFIG.find(r=>r.id===redeId);
+    if (!conf) continue;
+    setTimeout(() => {
+      const url = conf.shareUrl(cap, tags);
+      window.open(url, '_blank');
+      if (conf.copyNeeded) {
+        showToast('📋 Legenda copiada! Cole no '+redeId+' que abriu →', 4000);
+      } else {
+        showToast('✓ Abrindo '+redeId+' com o texto pré-preenchido →', 3000);
+      }
+    }, delay);
+    delay += 1000;
+  }
 }
 
 function pcAgendar(slID) {
@@ -1132,30 +1173,58 @@ function salvarPost(btn) { btn.textContent='✓ Salvo!'; btn.className='pabtn ap
 
 // ========= REDES SOCIAIS — CONEXÃO SIMPLIFICADA =========
 
+// SVG icons das redes sociais (brand logos oficiais)
+const NET_ICONS = {
+  Instagram: `<svg viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+  Facebook: `<svg viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+  TikTok: `<svg viewBox="0 0 24 24" fill="white"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>`,
+  YouTube: `<svg viewBox="0 0 24 24" fill="white"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>`,
+  LinkedIn: `<svg viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
+  Twitter: `<svg viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.932-9.077-8.38-11.423H8.264l4.337 5.735L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`
+};
+
 const REDES_CONFIG = [
-  { id:'Instagram',  nome:'Instagram',  cor:'linear-gradient(135deg,#C13584,#F56040)', icon:'📷', descricao:'Conta profissional ou criadora' },
-  { id:'Facebook',   nome:'Facebook',   cor:'#1877F2', icon:'f',  descricao:'Página do Facebook' },
-  { id:'TikTok',     nome:'TikTok',     cor:'#111',    icon:'♪',  descricao:'Conta pessoal ou empresarial' },
-  { id:'YouTube',    nome:'YouTube',    cor:'#FF0000', icon:'▶',  descricao:'Canal do YouTube' },
-  { id:'LinkedIn',   nome:'LinkedIn',   cor:'#0A66C2', icon:'in', descricao:'Perfil ou empresa' },
-  { id:'Twitter',    nome:'Twitter / X',cor:'#111',    icon:'𝕏',  descricao:'Conta pessoal ou profissional' },
+  { id:'Instagram',  nome:'Instagram',  cls:'bi-ig', descricao:'Conta profissional ou criadora',
+    shareUrl: (cap,tags) => 'https://www.instagram.com/', copyNeeded: true },
+  { id:'Facebook',   nome:'Facebook',   cls:'bi-fb', descricao:'Página do Facebook',
+    shareUrl: (cap,tags) => 'https://www.facebook.com/sharer/sharer.php?quote='+encodeURIComponent(cap+' '+tags), copyNeeded: false },
+  { id:'TikTok',     nome:'TikTok',     cls:'bi-tt', descricao:'Conta pessoal ou empresarial',
+    shareUrl: (cap,tags) => 'https://www.tiktok.com/', copyNeeded: true },
+  { id:'YouTube',    nome:'YouTube',    cls:'bi-yt', descricao:'Canal do YouTube',
+    shareUrl: (cap,tags) => 'https://studio.youtube.com/', copyNeeded: true },
+  { id:'LinkedIn',   nome:'LinkedIn',   cls:'bi-li', descricao:'Perfil ou empresa',
+    shareUrl: (cap,tags) => 'https://www.linkedin.com/sharing/share-offsite/?summary='+encodeURIComponent(cap+' '+tags)+'&url=https://socialhub-site.onrender.com', copyNeeded: false },
+  { id:'Twitter',    nome:'Twitter / X',cls:'bi-tw', descricao:'Conta pessoal ou profissional',
+    shareUrl: (cap,tags) => 'https://twitter.com/intent/tweet?text='+encodeURIComponent(cap+' '+tags.split(' ').slice(0,5).join(' ')), copyNeeded: false },
 ];
 
-// Renderizar cards das redes
+// Toast de notificação
+function showToast(msg, duration=3000) {
+  const t = document.getElementById('sh-toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+// Renderizar cards das redes com SVG
 function renderNetCards() {
   const grid = document.getElementById('nets-grid');
   if (!grid) return;
-  grid.innerHTML = REDES_CONFIG.map(r => `
-    <div class="net-card2 ${_tokens[r.id]?'connected':''}" id="nc2_${r.id}">
-      <div class="nc2-icon" style="background:${r.cor};">${r.icon}</div>
-      <div class="nc2-info">
-        <div class="nc2-nome">${r.nome}</div>
-        <div class="nc2-desc" id="ncdesc_${r.id}">${_tokens[r.id] ? '✓ @'+_tokens[r.id].username : r.descricao}</div>
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:16px;';
+  grid.innerHTML = REDES_CONFIG.map(r => {
+    const connected = !!_tokens[r.id];
+    const username = connected ? _tokens[r.id].username : '';
+    return `<div class="nc3 ${connected?'connected':''}" id="nc3_${r.id}" onclick="abrirConexao('${r.id}')">
+      <div class="brand-icon ${r.cls}">${NET_ICONS[r.id]||''}</div>
+      <div class="nc3-body">
+        <div class="nc3-name">${r.nome}</div>
+        <div class="nc3-status" id="ncst_${r.id}">${connected ? '✓ Conectado como @'+username : r.descricao}</div>
       </div>
-      <button class="nc2-btn ${_tokens[r.id]?'connected':''}" onclick="abrirConexao('${r.id}')">
-        ${_tokens[r.id] ? 'Reconfigurar' : 'Conectar'}
-      </button>
-    </div>`).join('');
+      <button class="nc3-btn" onclick="event.stopPropagation();abrirConexao('${r.id}')">${connected?'Reconfigurar':'Conectar'}</button>
+    </div>`;
+  }).join('');
 }
 
 const _tokens = {};
@@ -1194,11 +1263,12 @@ function abrirConexao(rede) {
         </div>
       </div>
 
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button onclick="confirmarConexao('${rede}')" id="btnSalvar_${rede}"
-          style="flex:1;padding:13px;border-radius:11px;background:${r.cor};border:none;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          style="flex:1;min-width:140px;padding:13px;border-radius:11px;background:${r.cor};border:none;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
           ✓ Conectar ${r.nome}
         </button>
+        ${_tokens[rede]?`<button onclick="fecharModalRede();desconectarRede('${rede}')" style="padding:13px 16px;border-radius:11px;border:1px solid #f87171;background:transparent;font-size:13px;color:#dc2626;cursor:pointer;">Desconectar</button>`:''}
         <button onclick="fecharModalRede()"
           style="padding:13px 18px;border-radius:11px;border:1px solid var(--border2);background:transparent;font-size:14px;color:var(--muted);cursor:pointer;">
           Cancelar
@@ -1230,18 +1300,21 @@ async function confirmarConexao(rede) {
   if(btn){ btn.textContent='Salvando...'; btn.disabled=true; }
 
   try {
+    // Salvar no backend
     if (clienteData?.id && clienteData.id !== 0) {
       await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/tokens', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ network:rede, access_token:'pending', page_id:'', username })
+        body: JSON.stringify({ network:rede, access_token:'connected', page_id:'', username })
       });
     }
+    // Salvar no localStorage para persistência (não precisa reconectar)
     _tokens[rede] = { username };
+    salvarTokensLocal();
     renderNetCards();
-    // Atualizar contador
     const n = Object.keys(_tokens).length;
     if(document.getElementById('m-redes')) document.getElementById('m-redes').textContent = n;
     fecharModalRede();
+    showToast('✓ '+rede+' conectado como @'+username);
   } catch(e) {
     errEl.textContent = 'Erro ao salvar. Tente novamente.';
     errEl.style.display = 'block';
@@ -1249,14 +1322,56 @@ async function confirmarConexao(rede) {
   }
 }
 
+function salvarTokensLocal() {
+  try {
+    const key = 'sh_tokens_'+(clienteData?.email||'guest');
+    localStorage.setItem(key, JSON.stringify(_tokens));
+  } catch(e) {}
+}
+
+function carregarTokensLocal() {
+  try {
+    const key = 'sh_tokens_'+(clienteData?.email||'guest');
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const obj = JSON.parse(saved);
+      Object.assign(_tokens, obj);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+async function desconectarRede(rede) {
+  if (!confirm('Desconectar '+rede+'? Você precisará reconectar para publicar.')) return;
+  delete _tokens[rede];
+  salvarTokensLocal();
+  if (clienteData?.id && clienteData.id !== 0) {
+    await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/tokens/'+rede, {method:'DELETE'}).catch(()=>{});
+  }
+  renderNetCards();
+  showToast(rede+' desconectado.');
+}
+
 async function carregarTokens() {
-  if (!clienteData?.id || clienteData.id === 0) { renderNetCards(); return; }
+  // 1. Carregar localStorage imediatamente (sem esperar backend)
+  const localLoaded = carregarTokensLocal();
+  if (localLoaded) { renderNetCards(); }
+
+  // 2. Sincronizar com backend em background
+  if (!clienteData?.id || clienteData.id === 0) { if(!localLoaded) renderNetCards(); return; }
   try {
     const tokens = await fetch(BACKEND+'/api/clientes/'+clienteData.id+'/tokens').then(r=>r.json());
-    (tokens||[]).forEach(t => { _tokens[t.network] = { username: t.username||'' }; });
+    let changed = false;
+    (tokens||[]).forEach(t => {
+      if (!_tokens[t.network] || _tokens[t.network].username !== t.username) {
+        _tokens[t.network] = { username: t.username||'' };
+        changed = true;
+      }
+    });
+    if (changed) { salvarTokensLocal(); renderNetCards(); }
     if(document.getElementById('m-redes')) document.getElementById('m-redes').textContent = Object.keys(_tokens).length;
-  } catch(e) {}
-  renderNetCards();
+  } catch(e) { if(!localLoaded) renderNetCards(); }
 }
 
 function conectarRede() {} // stub legado
@@ -1713,7 +1828,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
   </div>
 </div>
-
-
+<div class="sh-toast" id="sh-toast"></div>
 </body>
 </html>
