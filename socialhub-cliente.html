@@ -76,11 +76,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .gen-bar-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s;}
 
 /* POST CARDS VISUAIS */
-.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 .post-visual{background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);transition:transform .2s;}
 .post-visual:hover{transform:translateY(-3px);}
-.post-img{width:100%;height:180px;object-fit:cover;display:block;background:var(--surface2);}
-.post-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,#e8e8f8,#d4d0f8);display:flex;align-items:center;justify-content:center;font-size:48px;}
+.post-img{width:100%;height:200px;object-fit:cover;display:block;}
+.post-canvas{width:100%;height:200px;display:block;cursor:pointer;}
+.post-img-placeholder{width:100%;height:200px;background:linear-gradient(135deg,#e8e8f8,#d4d0f8);display:flex;align-items:center;justify-content:center;font-size:48px;}
+.post-dl-bar{display:flex;gap:6px;padding:8px 14px;background:var(--surface2);border-top:1px solid var(--border);}
+.btn-dl{flex:1;padding:7px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--accent);text-align:center;}
+.btn-post-ig{flex:1;padding:7px;border-radius:8px;border:none;background:linear-gradient(135deg,#C13584,#F56040);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:white;text-align:center;}
 .post-body{padding:14px 16px;}
 .post-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .post-net-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;}
@@ -379,9 +383,89 @@ function gerarPostsDemo() {
   ];
 }
 
-function imgUrl(keywords, w=600, h=300) {
-  const kw = encodeURIComponent((keywords||'food restaurant').replace(/[#]/g,''));
-  return `https://source.unsplash.com/${w}x${h}/?${kw}&sig=${Math.random()}`;
+// Gera imagem do post como canvas 1080x1080 (Instagram square)
+function gerarCardCanvas(canvasEl, emoji, caption, network, hashtags, tipo) {
+  const W = canvasEl.width = 1080;
+  const H = canvasEl.height = 1080;
+  const ctx = canvasEl.getContext('2d');
+  const nets = {
+    Instagram: ['#C13584','#F56040','#FFDC80'],
+    Facebook: ['#1877F2','#0a5fc7','#1877F2'],
+    TikTok: ['#010101','#333','#69C9D0'],
+    YouTube: ['#FF0000','#cc0000','#FF6B6B'],
+    LinkedIn: ['#0A66C2','#004182','#0A66C2'],
+    default: ['#7c5cfc','#a78bfa','#534AB7']
+  };
+  const colors = nets[network] || nets.default;
+  // Background gradient
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0, colors[0]);
+  grad.addColorStop(0.6, colors[1]);
+  grad.addColorStop(1, colors[2]);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+  // Overlay pattern
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  for(let i=0;i<W;i+=60){ctx.fillRect(i,0,1,H);}
+  for(let j=0;j<H;j+=60){ctx.fillRect(0,j,W,1);}
+  // White card in center
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  ctx.roundRect(60,60,W-120,H-120,40);
+  ctx.fill();
+  // Emoji grande
+  ctx.font = '180px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(emoji||'📱', W/2, 340);
+  // Rede social
+  ctx.font = 'bold 48px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillText(network||'Post', W/2, 420);
+  // Legenda (quebra em linhas)
+  ctx.font = '44px sans-serif';
+  ctx.fillStyle = 'white';
+  const words = (caption||'').replace(/#\w+/g,'').trim().split(' ');
+  let line='', y=520, lh=60, maxW=W-160;
+  for(const word of words) {
+    const test = line+word+' ';
+    if(ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line.trim(), W/2, y); y+=lh; line=word+' ';
+      if(y>820) break;
+    } else { line=test; }
+  }
+  if(line && y<=820) ctx.fillText(line.trim(), W/2, y);
+  // Hashtags
+  ctx.font = '34px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  const htags = (hashtags||'').split(' ').slice(0,4).join(' ');
+  ctx.fillText(htags, W/2, 920);
+  // Logo SocialHub
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('✦ SocialHub', W/2, 990);
+  // Retornar data URL
+  return canvasEl.toDataURL('image/png');
+}
+
+function baixarCard(canvasEl, network) {
+  const link = document.createElement('a');
+  link.download = 'post-'+network.toLowerCase()+'-socialhub.png';
+  link.href = canvasEl.toDataURL('image/png');
+  link.click();
+}
+
+function abrirPublicar(caption, hashtags, network) {
+  const texto = encodeURIComponent((caption||'') + '\n\n' + (hashtags||''));
+  const urls = {
+    Instagram: 'https://www.instagram.com/',
+    Facebook: 'https://www.facebook.com/',
+    TikTok: 'https://www.tiktok.com/',
+    LinkedIn: 'https://www.linkedin.com/sharing/share-offsite/?url='+encodeURIComponent(caption||''),
+    Twitter: 'https://twitter.com/intent/tweet?text='+texto
+  };
+  alert('📋 Legenda copiada! Cole na rede social que vai abrir.\n\nLembre de baixar a imagem também.');
+  navigator.clipboard?.writeText((caption||'')+'\n\n'+(hashtags||''));
+  window.open(urls[network]||'https://www.instagram.com/', '_blank');
 }
 
 function netClass(r){return {Instagram:'ig',Facebook:'fb',TikTok:'tt',YouTube:'yt',LinkedIn:'li','Twitter/X':'tw',Twitter:'tw'}[r]||'';}
@@ -413,15 +497,16 @@ function postCard(p, isVideo) {
   }
 
   const kw = p.img_keywords||(p.niche||clienteData?.niche||'business')+' '+p.network;
+  setTimeout(()=>{const cv=document.getElementById(cid);if(cv)gerarCardCanvas(cv,'${p.emoji||"📱"}','${(p.caption||"").replace(/'/g,"\'").replace(/`/g,"\`").slice(0,120)}','${p.network||"Post"}','${(p.hashtags||"").replace(/'/g,"\'").slice(0,80)}','post');},50);
   return `<div class="post-visual">
-    <img class="post-img" src="${imgUrl(kw)}" alt="Post" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-    <div class="post-img-placeholder" style="display:none;">${p.emoji||'📱'}</div>
+    <canvas class="post-canvas" id="${cid}" width="1080" height="1080" title="Clique para baixar" onclick="baixarCard(this,'${p.network||'post'}')"></canvas>
     <div class="post-body">
       <div class="post-meta"><span class="post-net-badge ${nc}">${p.network||'—'}</span><span class="post-time">${dt}</span><span class="post-status-badge ${stClass}">${stLabel}</span></div>
       <div class="post-caption">${p.caption||''}</div>
       <div class="post-tags">${p.hashtags||''}</div>
-      <div class="post-actions-row">${actions}</div>
+      <div class="post-actions-row">${!mini?actions:''}</div>
     </div>
+    ${!mini?dlBar:''}
   </div>`;
 }
 
@@ -518,15 +603,21 @@ async function gerarConteudo() {
         </div>
       </div>`;
     } else {
+      const cid2 = 'cvgen'+Date.now();
       resultado.innerHTML = `<div class="post-visual">
-        <img class="post-img" src="${imgUrl(parsed.img_keywords||nicho)}" loading="lazy" onerror="this.style.display='none'">
+        <canvas class="post-canvas" id="${cid2}" width="1080" height="1080" onclick="baixarCard(this,'${rede}')"></canvas>
         <div class="post-body">
           <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede}</span><span class="post-status-badge st-sched">Novo</span></div>
           <div class="post-caption">${parsed.legenda||''}</div>
           <div class="post-tags">${parsed.hashtags||''}</div>
-          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this,'${rede}')">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+          <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this)">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
+        </div>
+        <div class="post-dl-bar">
+          <button class="btn-dl" onclick="baixarCard(document.getElementById('${cid2}'),'${rede}')">⬇ Baixar imagem</button>
+          <button class="btn-post-ig" onclick="abrirPublicar(this.closest('.post-visual').querySelector('.post-caption').textContent, this.closest('.post-visual').querySelector('.post-tags').textContent,'${rede}')">→ Publicar no ${rede}</button>
         </div>
       </div>`;
+      setTimeout(()=>{const cv=document.getElementById(cid2);if(cv)gerarCardCanvas(cv,parsed.emoji||'✨',parsed.legenda||'','${rede}',parsed.hashtags||'','post');},50);
     }
   } catch(e) {
     clearInterval(iv);
