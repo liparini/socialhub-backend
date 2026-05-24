@@ -237,7 +237,7 @@ async function gerarPostsParaCliente(clienteId) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 2000,
         messages: [{
           role: 'user',
@@ -450,7 +450,7 @@ Responda APENAS com JSON: {"emoji":"🎯","legenda":"legenda completa com emojis
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 800,
         messages: [{ role: 'user', content: prompts[tipo] || prompts.imagem }]
       })
