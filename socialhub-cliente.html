@@ -229,6 +229,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
             <option value="Todas as redes">Todas as redes</option>
           </select>
         </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+          <div style="font-size:13px;color:var(--muted);white-space:nowrap;">🎯 Nicho do post:</div>
+          <input type="text" id="gen-nicho-custom" placeholder="Deixe em branco para usar seu nicho principal..." style="flex:1;border:none;background:transparent;font-size:13px;color:var(--text);outline:none;font-family:'DM Sans',sans-serif;">
+          <div id="gen-nicho-atual" style="font-size:11px;color:var(--accent);white-space:nowrap;cursor:pointer;" onclick="document.getElementById('gen-nicho-custom').value='';document.getElementById('gen-nicho-custom').focus();">usar meu nicho ↩</div>
+        </div>
         <button class="btn-gen" id="btn-gen" onclick="gerarConteudo()">
           <span id="btn-gen-ico">✦</span> <span id="btn-gen-txt">Gerar com IA agora</span>
         </button>
@@ -332,6 +337,11 @@ async function handleGoogleLogin(response) {
   }
 }
 
+function atualizarNichoLabel() {
+  const el = document.getElementById('gen-nicho-atual');
+  if (el && clienteData?.niche) el.textContent = 'nicho: ' + clienteData.niche + ' ↩';
+}
+
 function entrar(googleName, googlePic) {
   document.getElementById('login-wrap').style.display='none';
   document.getElementById('app').classList.add('on');
@@ -346,6 +356,12 @@ function entrar(googleName, googlePic) {
   document.getElementById('pl-nicho').textContent = clienteData.niche||'—';
   document.getElementById('pl-venc').textContent = clienteData.expires_at?new Date(clienteData.expires_at).toLocaleDateString('pt-BR'):'—';
   document.getElementById('m-rmax').textContent = clienteData.plan==='premium'?6:clienteData.plan==='pro'?4:2;
+  // Preencher nicho padrão no campo
+  const nichoInput = document.getElementById('gen-nicho-custom');
+  if (nichoInput && clienteData.niche) {
+    nichoInput.placeholder = 'Nicho padrão: '+clienteData.niche+' — ou escreva outro aqui...';
+  }
+  atualizarNichoLabel();
   loadPosts();
 }
 
@@ -454,6 +470,13 @@ function baixarCard(canvasEl, network) {
   link.click();
 }
 
+function abrirPublicarCard(canvasId, network) {
+  const cv = document.getElementById(canvasId);
+  const caption = cv ? cv.dataset.caption : '';
+  const hashtags = cv ? cv.dataset.hash : '';
+  abrirPublicar(caption, hashtags, network);
+}
+
 function abrirPublicar(caption, hashtags, network) {
   const texto = encodeURIComponent((caption||'') + '\n\n' + (hashtags||''));
   const urls = {
@@ -497,9 +520,13 @@ function postCard(p, isVideo) {
   }
 
   const kw = p.img_keywords||(p.niche||clienteData?.niche||'business')+' '+p.network;
-  setTimeout(()=>{const cv=document.getElementById(cid);if(cv)gerarCardCanvas(cv,'${p.emoji||"📱"}','${(p.caption||"").replace(/'/g,"\'").replace(/`/g,"\`").slice(0,120)}','${p.network||"Post"}','${(p.hashtags||"").replace(/'/g,"\'").slice(0,80)}','post');},50);
+  const safeEmoji = (p.emoji||'📱').replace(/['"]/g,'');
+  const safeCaption = (p.caption||'').replace(/['"\\]/g,' ').slice(0,120);
+  const safeNet = (p.network||'Post').replace(/['"]/g,'');
+  const safeHash = (p.hashtags||'').replace(/['"]/g,'').slice(0,80);
+  setTimeout(()=>{const cv=document.getElementById(cid);if(cv)gerarCardCanvas(cv,cv.dataset.emoji,cv.dataset.caption,cv.dataset.net,cv.dataset.hash,'post');},50);
   return `<div class="post-visual">
-    <canvas class="post-canvas" id="${cid}" width="1080" height="1080" title="Clique para baixar" onclick="baixarCard(this,'${p.network||'post'}')"></canvas>
+    <canvas class="post-canvas" id="${cid}" width="1080" height="1080" title="Clique para baixar" data-emoji="${safeEmoji}" data-caption="${safeCaption}" data-net="${safeNet}" data-hash="${safeHash}" onclick="baixarCard(this,this.dataset.net)"></canvas>
     <div class="post-body">
       <div class="post-meta"><span class="post-net-badge ${nc}">${p.network||'—'}</span><span class="post-time">${dt}</span><span class="post-status-badge ${stClass}">${stLabel}</span></div>
       <div class="post-caption">${p.caption||''}</div>
@@ -541,7 +568,8 @@ function selTipo(el, tipo) {
 async function gerarConteudo() {
   const assunto = document.getElementById('gen-assunto').value.trim();
   const rede = document.getElementById('gen-rede').value;
-  const nicho = clienteData?.niche||'negócio';
+  const nichoCustom = document.getElementById('gen-nicho-custom')?.value.trim();
+  const nicho = nichoCustom || clienteData?.niche || 'negócio';
   const btn = document.getElementById('btn-gen');
   const prog = document.getElementById('gen-progress');
   const bar = document.getElementById('gen-bar');
@@ -604,8 +632,11 @@ async function gerarConteudo() {
       </div>`;
     } else {
       const cid2 = 'cvgen'+Date.now();
+      const safeL = (parsed.legenda||'').replace(/['"]/g,' ').slice(0,120);
+      const safeH = (parsed.hashtags||'').replace(/['"]/g,' ').slice(0,80);
+      const safeE = (parsed.emoji||'✨').replace(/['"]/g,'');
       resultado.innerHTML = `<div class="post-visual">
-        <canvas class="post-canvas" id="${cid2}" width="1080" height="1080" onclick="baixarCard(this,'${rede}')"></canvas>
+        <canvas class="post-canvas" id="${cid2}" width="1080" height="1080" data-caption="${safeL}" data-hash="${safeH}" data-emoji="${safeE}" data-net="${rede}" onclick="baixarCard(this,this.dataset.net)"></canvas>
         <div class="post-body">
           <div class="post-meta"><span class="post-net-badge ${netClass(rede)}">${rede}</span><span class="post-status-badge st-sched">Novo</span></div>
           <div class="post-caption">${parsed.legenda||''}</div>
@@ -613,11 +644,11 @@ async function gerarConteudo() {
           <div class="post-actions-row"><button class="pabtn green" onclick="salvarPost(this)">✓ Salvar e agendar</button><button class="pabtn" onclick="document.getElementById('gen-resultado').innerHTML=''">Descartar</button></div>
         </div>
         <div class="post-dl-bar">
-          <button class="btn-dl" onclick="baixarCard(document.getElementById('${cid2}'),'${rede}')">⬇ Baixar imagem</button>
-          <button class="btn-post-ig" onclick="abrirPublicar(this.closest('.post-visual').querySelector('.post-caption').textContent, this.closest('.post-visual').querySelector('.post-tags').textContent,'${rede}')">→ Publicar no ${rede}</button>
+          <button class="btn-dl" onclick="baixarCard(document.getElementById('${cid2}'),document.getElementById('${cid2}').dataset.net)">⬇ Baixar imagem</button>
+          <button class="btn-post-ig" onclick="abrirPublicarCard('${cid2}',document.getElementById('${cid2}').dataset.net)">→ Publicar no ${rede}</button>
         </div>
       </div>`;
-      setTimeout(()=>{const cv=document.getElementById(cid2);if(cv)gerarCardCanvas(cv,parsed.emoji||'✨',parsed.legenda||'','${rede}',parsed.hashtags||'','post');},50);
+      setTimeout(()=>{const cv=document.getElementById(cid2);if(cv)gerarCardCanvas(cv,cv.dataset.emoji,cv.dataset.caption,cv.dataset.net,cv.dataset.hash,'post');},50);
     }
   } catch(e) {
     clearInterval(iv);
