@@ -489,15 +489,6 @@ async function gerarConteudo() {
     msg.textContent='Conteúdo gerado! ✓';
     setTimeout(()=>{prog.style.display='none';},1000);
 
-    const data = await resp.json();
-    const raw = data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(raw);
-
-    clearInterval(iv);
-    bar.style.width='100%';
-    msg.textContent='Conteúdo gerado! ✓';
-    setTimeout(()=>{prog.style.display='none';},1000);
-
     if (tipoSelecionado==='video') {
       resultado.innerHTML = `<div class="post-visual">
         <div class="video-thumb">
